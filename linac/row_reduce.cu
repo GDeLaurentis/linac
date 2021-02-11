@@ -1,17 +1,25 @@
 #define FIELD_CHARACTERISTIC {FIELD_CHARACTERISTIC}
+#define NBR_ROWS {NBR_ROWS}
+#define NBR_COLUMNS {NBR_COLUMNS}
 
 #include <pycuda-complex.hpp>
 #include <stdio.h>
 #include <math.h>
+
+#if FIELD_CHARACTERISTIC > 0
+typedef unsigned int matrix_type;
+#else
+typedef pycuda::complex<double> matrix_type;
+#endif
 
 
 /*!!!  DECLARATION  !!!*/
 
 // DEVICE VARIABLES
 
-__device__ int NbrRows = {NbrRows};
-__device__ int NbrColumns = {NbrColumns};
-__device__ int MaxMatrixId = {MaxMatrixId};
+__device__ int NbrRows = NBR_ROWS;
+__device__ int NbrColumns = NBR_COLUMNS;
+__device__ int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
 __device__ int i = 0;  // row counter
 __device__ int j = 0;  // column counter
 __device__ bool bHeadIsBiggerThanTollerance = true;
@@ -32,20 +40,21 @@ __device__ int Inverse (int a);
 __device__ unsigned int ModP (int a);
 __device__ unsigned int Product64 (unsigned long int a, unsigned long int b);
 #endif
-__device__ void RescaleRow ({Type} *Matrix);
-__device__ void RowReduce ({Type} *Matrix);
+__device__ void RescaleRow (matrix_type *Matrix);
+__device__ void RowReduce (matrix_type *Matrix);
 
 // GLOBAL FUNCTIONS
 
 __global__ void IncrementCounters ();
-__global__ void CompareHeadToTollerance ({Type} *Matrix);
-__global__ void ConditionalRescaleRow ({Type} *Matri);
-__global__ void ConditionalRowReduce ({Type} *Matrix);
+__global__ void CompareHeadToTollerance (matrix_type *Matrix);
+__global__ void ConditionalRescaleRow (matrix_type *Matri);
+__global__ void ConditionalRowReduce (matrix_type *Matrix);
 #if FIELD_CHARACTERISTIC == 0
-__global__ void SetRowScales ({Type} *Matrix);
-__global__ void SwitchRows ({Type} *Matrix);
-__global__ void ThreadsReduceToMaxIndex ({Type} *Matrix);
-__global__ void BlocksReduceToMaxIndex ({Type} *Matrix);
+__global__ void SetRowScales (matrix_type *Matrix);
+__global__ void SwitchRows (matrix_type *Matrix);
+__global__ void ThreadsReduceToMaxIndex (matrix_type *Matrix);
+__global__ void BlocksReduceToMaxIndex (matrix_type *Matrix);
+#else
 #endif
 
 
@@ -109,7 +118,7 @@ __device__ unsigned int ModP (int a) {
 }
 #endif
 
-__device__ void RescaleRow({Type} *Matrix) {
+__device__ void RescaleRow(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int id_i_head = i * NbrColumns + j;
     int MaxId = (i + 1) * NbrColumns;
@@ -123,7 +132,7 @@ __device__ void RescaleRow({Type} *Matrix) {
     }
 }
 
-__device__ void RowReduce({Type} *Matrix) {
+__device__ void RowReduce(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
     int id_j_head = blockIdx.x * NbrColumns + j;
@@ -148,7 +157,7 @@ __device__ void RowReduce({Type} *Matrix) {
 // GLOBAL FUNCTIONS
 
 #if FIELD_CHARACTERISTIC == 0
-__global__ void SetRowScales({Type} *Matrix) {
+__global__ void SetRowScales(matrix_type *Matrix) {
     __shared__ double sdata[4096];
 
     int RowId = blockIdx.x;
@@ -198,7 +207,7 @@ __global__ void SetRowScales({Type} *Matrix) {
     }
 }
 
-__global__ void SwitchRows({Type} *Matrix) {
+__global__ void SwitchRows(matrix_type *Matrix) {
     if (blockIdx.x == 0) {  // Switch Scales Rows
 	if (threadIdx.x == 0) {
 	    int id_i = i;
@@ -220,7 +229,7 @@ __global__ void SwitchRows({Type} *Matrix) {
     }
 }
 
-__global__ void ThreadsReduceToMaxIndex({Type} *Matrix) {
+__global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
     __shared__ double sdata[1024];
     __shared__ int idata[1024];
 
@@ -262,7 +271,7 @@ __global__ void ThreadsReduceToMaxIndex({Type} *Matrix) {
     }
 }
 
-__global__ void BlocksReduceToMaxIndex({Type} *Matrix) {
+__global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     __shared__ double sdata[8];
     __shared__ int idata[8];
     // int NbrCandidates = blockDim.x;
@@ -310,7 +319,7 @@ __global__ void IncrementCounters () {
     }
 }
 
-__global__ void CompareHeadToTollerance({Type} *Matrix) {
+__global__ void CompareHeadToTollerance(matrix_type *Matrix) {
     int MatrixId = i * NbrColumns + j;
 #if FIELD_CHARACTERISTIC > 0
     if (MatrixId < MaxMatrixId && Matrix[MatrixId] != 0) {
@@ -324,13 +333,13 @@ __global__ void CompareHeadToTollerance({Type} *Matrix) {
     }
 }
 
-__global__ void ConditionalRescaleRow({Type} *Matrix) {
+__global__ void ConditionalRescaleRow(matrix_type *Matrix) {
     if (bHeadIsBiggerThanTollerance == true){
 	RescaleRow(Matrix);
     }
 }
 
-__global__ void ConditionalRowReduce({Type} *Matrix) {
+__global__ void ConditionalRowReduce(matrix_type *Matrix) {
     if (bHeadIsBiggerThanTollerance == true){
 	RowReduce(Matrix);
     }

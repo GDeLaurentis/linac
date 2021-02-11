@@ -23,19 +23,13 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     # Compile Cuda Code - sets Cuda* Functions
     NbrRows, NbrColumns = matrix.shape
 
-    if field_characteristic == 0:  # runs with complex128
-        exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
-                                             NbrRows=NbrRows, NbrColumns=NbrColumns, MaxMatrixId=NbrRows * NbrColumns,
-                                             FIELD_CHARACTERISTIC=field_characteristic, Type='pycuda::complex<double>')), locals(), globals())
-    else:  # runs with unsigned int (32 bits)
-        exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
-                                             NbrRows=NbrRows, NbrColumns=NbrColumns, MaxMatrixId=NbrRows * NbrColumns,
-                                             FIELD_CHARACTERISTIC=field_characteristic, Type='unsigned int')), locals(), globals())
+    exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
+                                         NBR_ROWS=NbrRows, NBR_COLUMNS=NbrColumns, FIELD_CHARACTERISTIC=field_characteristic, )), locals(), globals())
 
     # Push Matrix To Device
-    if field_characteristic == 0:
+    if field_characteristic == 0:  # runs with complex128
         matrix_cpu = matrix.astype("complex128")
-    else:
+    else:  # runs with unsigned int (32 bits)
         matrix_cpu = matrix.astype('uint32')
     matrix_gpu = cuda.mem_alloc(matrix_cpu.size * matrix_cpu.dtype.itemsize)
     cuda.memcpy_htod(matrix_gpu, matrix_cpu)
