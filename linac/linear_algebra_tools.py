@@ -36,7 +36,7 @@ def drop_bottom_zero_rows(row_reduced_matrix):
 
 def canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form):
     """Returns the kernel or null-space of a matrix in canonical form. The input should be in reduced echelon form."""
-    identity = numpy.identity(row_reduced_echelon_form.shape[1] - row_reduced_echelon_form.shape[0])
+    identity = numpy.identity(row_reduced_echelon_form.shape[1] - row_reduced_echelon_form.shape[0], dtype=int)
     non_pivot_columns = non_pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form)
     pivot_columns = pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form)
     incomplete_row_echelon_form = numpy.delete(row_reduced_echelon_form, pivot_columns, axis=1)  # drop left interweaved identity
@@ -48,7 +48,7 @@ def canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form):
 
 def row_reduced_echelon_form_canonical_kernel(canonical_kernel):
     """Returns the row reduced echelon form the kernel kernel."""
-    identity = numpy.identity(canonical_kernel.shape[0] - canonical_kernel.shape[1])
+    identity = numpy.identity(canonical_kernel.shape[0] - canonical_kernel.shape[1], dtype=int)
     non_pivot_columns = non_pivot_columns_from_canonical_kernel(canonical_kernel)
     pivot_columns = pivot_columns_from_canonical_kernel(canonical_kernel)
     incomplete_kernel = numpy.delete(canonical_kernel, non_pivot_columns, axis=0)  # drop bottom interweaved negative identity
