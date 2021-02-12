@@ -1,0 +1,81 @@
+# Author: Giuseppe
+# Created: 12/02/2021
+
+import numpy
+
+from linac.timeit_decorator import timeit
+from lips.fields.finite_field import ModP
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+@timeit
+def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold=10 ** -9, prime=None, verbose=False):
+    """
+    Row reduction to (reduced) echelon form on the cpu using numpy.
+    The matrix is kept of whatever object type it is made of, unless prime is specified.
+    In the latter case the computation happens over numpy.int64 in a finite field of chardinality prime.
+    """
+
+    if pivoting not in [0, 1, 2, 3]:
+        raise ValueError("Invalid pivoting.")
+    pivoting_type = ("no" if pivoting == 0 else "partial" if pivoting == 1 else "rook" if pivoting == 2 else "total")
+
+    (i, j) = (0, 0)
+    variable_order = list(range(len(matrix)))
+
+    if scaling is True:
+        row_scales = abs(matrix).max(axis=1, keepdims=True)
+        matrix = matrix / row_scales
+    if prime is not None:
+        matrix = matrix.astype('int64')
+
+    while i < matrix.shape[0] and j < matrix.shape[1]:
+
+        if verbose:
+            print("\rRowReduction with {} pivoting at line {}/{}".format(pivoting_type, i, matrix.shape[0] - 1), end="")
+
+        if pivoting == 1:  # partial pivoting
+            pivot_row = numpy.argmax(numpy.abs(matrix[i:, j])) + i
+            matrix[[i, pivot_row], :] = matrix[[pivot_row, i], :]  # permute row
+
+        elif pivoting > 1:
+
+            if pivoting == 2:  # rook pivoting
+                pivot_row, pivot_column = numpy.unravel_index(numpy.argmax(numpy.abs(matrix[i:, j:]) > 0.1), matrix[i:, j:].shape) + numpy.array([i, j])
+            elif pivoting == 3:  # total pivoting
+                pivot_row, pivot_column = numpy.unravel_index(numpy.argmax(numpy.abs(matrix[i:, j:])), matrix[i:, j:].shape) + numpy.array([i, j])
+
+            matrix[[i, pivot_row], :] = matrix[[pivot_row, i], :]  # permute row
+            matrix[:, [j, pivot_column]] = matrix[:, [pivot_column, j]]  # permute column
+            variable_order[j], variable_order[pivot_column] = variable_order[pivot_column], variable_order[j]  # keep track of variable order
+
+        if abs(matrix[i][j]) > threshold:
+            if prime is not None:
+                matrix[i, :] = matrix[i, :] * int(ModP(matrix[i][j], prime)._inv()) % prime
+            else:
+                matrix[i, :] = matrix[i, :] / matrix[i][j]
+            matrix[i + 1:, j:] = matrix[i + 1:, j:] - matrix[i + 1:, j: j + 1] * matrix[i: i + 1, j:]
+            if reduced_echelon is True:
+                matrix[:i, j:] = matrix[:i, j:] - matrix[:i, j: j + 1] * matrix[i: i + 1, j:]
+            (i, j) = (i + 1, j + 1)
+        else:
+            j = j + 1
+
+        if prime is not None:
+            matrix[:, j:] = matrix[:, j:] % prime
+
+    return matrix, variable_order
+
+
+# Old parallelised code, however it's faster to use numpy built-in slicing
+#
+# RowReducePartial = functools.partial(RowReduceInner, matrix[i, j:])
+# matrix[i + 1:, j:] = numpy.reshape(numpy.array(list(mapThreads(RowReducePartial, matrix[i + 1:, j:], verbose=False, UseParallelisation=False)), dtype=object), matrix[i + 1:, j:].shape)
+# if reduced_echelon is True:
+#     matrix[:i, j:] = numpy.reshape(numpy.array(list(mapThreads(RowReducePartial, matrix[:i, j:], verbose=False, UseParallelisation=False)), dtype=object), matrix[:i, j:].shape)
+
+# def RowReduceInner(row1, row2):
+#     return row2 - row2[0] * row1
+#     return [entry2 - row2[0] * entry1 for (entry1, entry2) in zip(row1, row2)]
