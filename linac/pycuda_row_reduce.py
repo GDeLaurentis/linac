@@ -36,6 +36,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
     if field_characteristic == 0:  # Set The Row Scales Array On The Gpu
         CudaSetRowScales(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns, FoldingMaxLength=2048) / 2.0)), 1, 1), grid=(NbrRows, 1))  # noqa
+        CudaRescaleRows(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns))), 1, 1), grid=(NbrRows, 1))  # noqa
 
     time_on_gpu, time_pivoting, time_compare, time_rescale, time_reduce, time_increment = [], [], [], [], [], []
 
@@ -51,7 +52,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
                                         grid=(number_of_foldings(NbrRows, FoldingMaxLength=2048), 1))
             if number_of_foldings(NbrRows, FoldingMaxLength=2048) > 1:
                 CudaBlocksReduceToMaxIndex(matrix_gpu, block=(int(math.ceil(number_of_foldings(NbrRows, FoldingMaxLength=2048) / 2)), 1, 1), grid=(1, 1))  # noqa
-            CudaSwitchRows(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(number_of_foldings(NbrColumns) + 1, 1))  # noqa
+            CudaSwitchRows(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(number_of_foldings(NbrColumns), 1))  # noqa
         time_pivoting[-1] += time.time()
 
         time_compare += [-time.time()]

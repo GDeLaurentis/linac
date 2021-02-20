@@ -26,6 +26,7 @@ __device__ bool bHeadIsBiggerThanTollerance = true;
 
 #if FIELD_CHARACTERISTIC > 0
 __device__ __constant__ unsigned int prime = FIELD_CHARACTERISTIC;
+__device__ int tollerance = 0;
 #else
 __device__ double tollerance = 0.000000001; // 10^-9
 __device__ double RowScales[8192]; // 2^13
@@ -51,6 +52,7 @@ __global__ void ConditionalRescaleRow (matrix_type *Matri);
 __global__ void ConditionalRowReduce (matrix_type *Matrix);
 #if FIELD_CHARACTERISTIC == 0
 __global__ void SetRowScales (matrix_type *Matrix);
+__global__ void RescaleRows (matrix_type *Matrix);
 __global__ void SwitchRows (matrix_type *Matrix);
 __global__ void ThreadsReduceToMaxIndex (matrix_type *Matrix);
 __global__ void BlocksReduceToMaxIndex (matrix_type *Matrix);
@@ -207,25 +209,35 @@ __global__ void SetRowScales(matrix_type *Matrix) {
     }
 }
 
+__global__ void RescaleRows (matrix_type *Matrix) {
+    __shared__ double rowScale;
+
+    if (threadIdx.x == 0) {
+	rowScale = RowScales[blockIdx.x];
+    }
+    __syncthreads();
+
+    int RowId = blockIdx.x;
+    int NbrFoldings = ceil(NbrColumns / (1.0 * blockDim.x));
+    int NbrColumnsPerIteration = ceil(NbrColumns / (1.0 * NbrFoldings));
+
+    for (unsigned int r = 0; r < NbrFoldings; r++) {
+	int ColumnId = threadIdx.x + r * NbrColumnsPerIteration;
+	int MatrixId = RowId * NbrColumns + ColumnId;
+	if (MatrixId < (RowId + 1) * NbrColumns) {
+	    Matrix[MatrixId] = Matrix[MatrixId] / rowScale;
+	}
+    }
+}
+
 __global__ void SwitchRows(matrix_type *Matrix) {
-    if (blockIdx.x == 0) {  // Switch Scales Rows
-	if (threadIdx.x == 0) {
-	    int id_i = i;
-	    int id_j = IndexOfMaximum;
-	    double temporary = RowScales[id_i];
-	    RowScales[id_i] = RowScales[id_j];
-	    RowScales[id_j] = temporary;
-	}
-    } else {  // Switch Matrix Rows
-	// int NbrFoldings = gridDim.x - 1;     // First Block Is For Scales
-	int FoldingLength = blockDim.x;
-	int id_i = i * NbrColumns + (blockIdx.x - 1) * FoldingLength + threadIdx.x;
-	int id_j = IndexOfMaximum * NbrColumns + (blockIdx.x - 1) * FoldingLength + threadIdx.x;
-	if (id_j < (IndexOfMaximum + 1) * NbrColumns) {
-	    pycuda::complex<double> temporary = Matrix[id_i];
-	    Matrix[id_i] = Matrix[id_j];
-	    Matrix[id_j] = temporary;
-	}
+    int FoldingLength = blockDim.x;
+    int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
+    int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
+    if (id_j < (IndexOfMaximum + 1) * NbrColumns) {
+	pycuda::complex<double> temporary = Matrix[id_i];
+	Matrix[id_i] = Matrix[id_j];
+	Matrix[id_j] = temporary;
     }
 }
 
@@ -241,8 +253,8 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
     int MatrixId1 = RowId1 * NbrColumns + j;
     int MatrixId2 = RowId2 * NbrColumns + j;
     if (RowId2 < NbrRows) {
-	double value1 = abs(Matrix[MatrixId1]) / RowScales[RowId1];
-	double value2 = abs(Matrix[MatrixId2]) / RowScales[RowId2];
+	double value1 = abs(Matrix[MatrixId1]);
+	double value2 = abs(Matrix[MatrixId2]);
 	if (value1 > value2){
 	    idata[tid] = RowId1;
 	    sdata[tid] = value1;
@@ -252,7 +264,7 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
 	}
     } else if (RowId1 < NbrRows) {
 	idata[tid] = RowId1;
-	sdata[tid] = abs(Matrix[MatrixId1]) / RowScales[RowId1];
+	sdata[tid] = abs(Matrix[MatrixId1]);
     }
     __syncthreads();
 
@@ -281,8 +293,8 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     int MatrixId1 = RowId1 * NbrColumns + j;
     int MatrixId2 = RowId2 * NbrColumns + j;
     if (MatrixId2 < MaxMatrixId && RowId2 >= i) {
-	double value1 = abs(Matrix[MatrixId1]) / RowScales[RowId1];
-	double value2 = abs(Matrix[MatrixId2]) / RowScales[RowId2];
+	double value1 = abs(Matrix[MatrixId1]);
+	double value2 = abs(Matrix[MatrixId2]);
 	if (value1 > value2){
 	    idata[tid] = RowId1;
 	    sdata[tid] = value1;
@@ -291,7 +303,7 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
 	    sdata[tid] = value2;
 	}
     } else if (MatrixId1 < MaxMatrixId && RowId1 >= i) {
-	sdata[tid] = abs(Matrix[MatrixId1]) / RowScales[RowId1];
+	sdata[tid] = abs(Matrix[MatrixId1]);
 	idata[tid] = RowId1;
     }
 
@@ -325,7 +337,7 @@ __global__ void CompareHeadToTollerance(matrix_type *Matrix) {
     if (MatrixId < MaxMatrixId && Matrix[MatrixId] != 0) {
 #else
     int ScalesId = i;
-    if (MatrixId < MaxMatrixId && (abs(Matrix[MatrixId]) / RowScales[ScalesId]) > tollerance){
+    if (MatrixId < MaxMatrixId && abs(Matrix[MatrixId]) > tollerance) {
 #endif
 	bHeadIsBiggerThanTollerance = true;
     } else {
