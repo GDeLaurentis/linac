@@ -234,7 +234,7 @@ __global__ void SwitchRows(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
     int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
-    if (id_j < (IndexOfMaximum + 1) * NbrColumns) {
+    if (id_j < (IndexOfMaximum + 1) * NbrColumns && id_i < MaxMatrixId && id_j << MaxMatrixId) {
 	pycuda::complex<double> temporary = Matrix[id_i];
 	Matrix[id_i] = Matrix[id_j];
 	Matrix[id_j] = temporary;
@@ -336,7 +336,6 @@ __global__ void CompareHeadToTollerance(matrix_type *Matrix) {
 #if FIELD_CHARACTERISTIC > 0
     if (MatrixId < MaxMatrixId && Matrix[MatrixId] != 0) {
 #else
-    int ScalesId = i;
     if (MatrixId < MaxMatrixId && abs(Matrix[MatrixId]) > tollerance) {
 #endif
 	bHeadIsBiggerThanTollerance = true;

@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Author: Giuseppe
-# Created: 12/02/2021
+# Created: 10/07/2018 - Updated: 12/02/2021
 
 import numpy
 
