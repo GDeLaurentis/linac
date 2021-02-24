@@ -188,7 +188,7 @@ __global__ void SetRowScales(matrix_type *Matrix) {
     for (unsigned int r = 0; r < NbrFoldings; r++) {
 	int sdataId = threadIdx.x + r * blockDim.x;
 	for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
-	    if ((sdataId < s + r * blockDim.x) && ((sdataId + s) < NbrColumns / 2) && sdata[sdataId] < sdata[sdataId + s]) {
+	    if ((sdataId < s + r * blockDim.x) && ((sdataId + s) <= NbrColumns / 2) && sdata[sdataId] < sdata[sdataId + s]) {
 		sdata[sdataId] = sdata[sdataId + s];
 	    }
 	    __syncthreads();
@@ -234,7 +234,7 @@ __global__ void SwitchRows(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
     int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
-    if (id_j < (IndexOfMaximum + 1) * NbrColumns && id_i < MaxMatrixId && id_j << MaxMatrixId) {
+    if (id_j < (IndexOfMaximum + 1) * NbrColumns && id_i < MaxMatrixId && id_j < MaxMatrixId) {
 	pycuda::complex<double> temporary = Matrix[id_i];
 	Matrix[id_i] = Matrix[id_j];
 	Matrix[id_j] = temporary;

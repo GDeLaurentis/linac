@@ -26,7 +26,7 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
     pivoting_type = ("no" if pivoting == 0 else "partial" if pivoting == 1 else "rook" if pivoting == 2 else "total")
 
     (i, j) = (0, 0)
-    variable_order = list(range(len(matrix)))
+    variable_order = list(range(matrix.shape[1]))
 
     if scaling is True:
         row_scales = abs(matrix).max(axis=1, keepdims=True)
