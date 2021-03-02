@@ -40,8 +40,13 @@ def test_pivots_and_kernel_cuda_complex128(cached_matrix_relative_path, field_ch
     canonical_kernel = canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)
     assert row_reduced_echelon_form.shape == known_rref_shape
     assert canonical_kernel.shape == known_ck_shape
-    assert numpy.isclose(row_reduced_echelon_form.astype('complex'), row_reduced_echelon_form_canonical_kernel(
-        canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)).astype('complex')).all()
+    try:
+        check = numpy.isclose(row_reduced_echelon_form.astype('complex'), row_reduced_echelon_form_canonical_kernel(
+            canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)).astype('complex')).all()
+    except TypeError:
+        check = numpy.isclose(row_reduced_echelon_form.astype('int64'), row_reduced_echelon_form_canonical_kernel(
+            canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)).astype('int64')).all()
+    assert check
     assert row_reduced_echelon_form.shape[1] == canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form).shape[0]
     assert row_reduced_echelon_form.shape[0] + canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form).shape[1] == row_reduced_echelon_form.shape[1]
     assert pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form) == known_pivots

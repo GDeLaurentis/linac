@@ -11,7 +11,10 @@ import numpy
 
 
 def pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form):
-    return [numpy.where(numpy.isclose(row_reduced_echelon_form[i, :].astype('complex'), 1) == True)[0][0] for i in range(row_reduced_echelon_form.shape[0])]  # noqa
+    try:
+        return [numpy.where(numpy.isclose(row_reduced_echelon_form[i, :].astype('complex'), 1) == True)[0][0] for i in range(row_reduced_echelon_form.shape[0])]  # noqa
+    except TypeError:
+        return [numpy.where(numpy.isclose(row_reduced_echelon_form[i, :].astype('int64'), 1) == True)[0][0] for i in range(row_reduced_echelon_form.shape[0])]  # noqa
 
 
 def non_pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form):
@@ -20,7 +23,10 @@ def non_pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form):
 
 
 def non_pivot_columns_from_canonical_kernel(canonical_kernel):
-    return [numpy.where(numpy.isclose(canonical_kernel[:, i].astype('complex'), -1) == True)[0][-1] for i in range(canonical_kernel.shape[1])]  # noqa
+    try:
+        return [numpy.where(numpy.isclose(canonical_kernel[:, i].astype('complex'), -1) == True)[0][-1] for i in range(canonical_kernel.shape[1])]  # noqa
+    except TypeError:
+        return [numpy.where(numpy.isclose(canonical_kernel[:, i].astype('int64'), -1) == True)[0][-1] for i in range(canonical_kernel.shape[1])]  # noqa
 
 
 def pivot_columns_from_canonical_kernel(canonical_kernel):
