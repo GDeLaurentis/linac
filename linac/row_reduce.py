@@ -20,6 +20,8 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
     The matrix is kept of whatever object type it is made of, unless prime is specified.
     In the latter case the computation happens over numpy.int64 in a finite field of chardinality prime.
     """
+    if prime == 0:
+        prime = None
 
     if pivoting not in [0, 1, 2, 3]:
         raise ValueError("Invalid pivoting.")
@@ -37,7 +39,7 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
     while i < matrix.shape[0] and j < matrix.shape[1]:
 
         if verbose:
-            print("\rRowReduction with {} pivoting at line {}/{}".format(pivoting_type, i, matrix.shape[0] - 1), end="")
+            print("\rrow_reduce with {} pivoting at line {}/{}".format(pivoting_type, i, matrix.shape[0] - 1), end="")
 
         if pivoting == 1:  # partial pivoting
             pivot_row = numpy.argmax(numpy.abs(matrix[i:, j])) + i

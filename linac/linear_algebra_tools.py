@@ -28,8 +28,12 @@ def pivot_columns_from_canonical_kernel(canonical_kernel):
     return [index for index in range(canonical_kernel.shape[0]) if index not in non_pivot_columns]
 
 
+def isclose_or_greater(x, y, *args, **kwargs):
+    return (numpy.isclose(x, y, *args, **kwargs) or x > y)
+
+
 def drop_bottom_zero_rows(row_reduced_matrix):
-    while numpy.isclose(float(abs(row_reduced_matrix[-1]).max()), 0):
+    while not isclose_or_greater(float(abs(row_reduced_matrix[-1]).max()), 1):
         row_reduced_matrix = row_reduced_matrix[:-1]
     return row_reduced_matrix
 
