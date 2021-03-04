@@ -20,17 +20,17 @@ known_pivots_medium_test_matrix = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15
 @pytest.mark.parametrize(
     "cached_matrix_relative_path, field_characteristic, use_cuda, known_pivots, known_rref_shape, known_ck_shape",
     [
-        ('/test_data/small_test_matrix_mpc.npy', 0, False,
+        ('/test_data/small_kernel_test_matrix_mpc.npy', 0, False,
          known_pivots_small_test_matrix, (6, 7), (7, 1)),
-        ('/test_data/small_test_matrix_2147483647.npy', 2147483647, False,
+        ('/test_data/small_kernel_test_matrix_2147483647.npy', 2147483647, False,
          known_pivots_small_test_matrix, (6, 7), (7, 1)),
-        ('/test_data/medium_test_matrix_mpc.npy', 0, True,
+        ('/test_data/medium_kernel_test_matrix_mpc.npy', 0, True,
          known_pivots_medium_test_matrix, (31, 86), (86, 55)),
-        ('/test_data/medium_test_matrix_2147483647.npy', 2147483647, True,
+        ('/test_data/medium_kernel_test_matrix_2147483647.npy', 2147483647, True,
          known_pivots_medium_test_matrix, (31, 86), (86, 55)),
     ]
 )
-def test_pivots_and_kernel_cuda_complex128(cached_matrix_relative_path, field_characteristic, use_cuda, known_pivots, known_rref_shape, known_ck_shape):
+def test_pivots_and_kernels(cached_matrix_relative_path, field_characteristic, use_cuda, known_pivots, known_rref_shape, known_ck_shape):
     matrix = numpy.load(local_directory + cached_matrix_relative_path, allow_pickle=True)
     if use_cuda:
         row_reduced_matrix = cuda_row_reduce(matrix, field_characteristic=field_characteristic)
