@@ -1,0 +1,9 @@
+*.pyc
+__pycache__
+.*
+*~
+!.hidden
+*.egg-info/
+dist/
+htmlcov
+tests/test_data/large_linear_system_matrix_non_redundant.npy

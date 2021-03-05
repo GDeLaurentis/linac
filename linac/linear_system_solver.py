@@ -9,7 +9,6 @@ import numpy
 import lips
 
 from fractions import Fraction
-from linac.timeit_decorator import timeit
 from linac.row_reduce import row_reduce
 from linac.pycuda_row_reduce import cuda_row_reduce
 from linac.linear_algebra_tools import non_pivot_columns_from_row_reduced_echelon_form, drop_bottom_zero_rows
@@ -99,79 +98,17 @@ def rationalise(complex_number):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-def Solve(RowReducedMatrix, rounding=True):
+def solve(row_reduced_matrix, rounding=True):
     """Performes backsubstitution in a LU decomposition."""
-    # Rationalisation can be performed at the same time - is this more stable?
-    UniqueSolution = []
-    if len(RowReducedMatrix) < 1:
+    # rationalisation can be performed at the same time - is this more stable? - deprecated for now
+    unique_solution = []
+    if len(row_reduced_matrix) < 1:
         return []
-    for i in range(len(RowReducedMatrix[0]) - 1)[::-1]:
-        UniqueSolution += [(RowReducedMatrix[i][len(RowReducedMatrix[0]) - 1] -
-                            sum(entry1 * entry2 for entry1, entry2 in zip(UniqueSolution, RowReducedMatrix[i][::-1][1:]))) /
-                           RowReducedMatrix[i][::-1][len(UniqueSolution) + 1]]
-        if rounding is True and type(RowReducedMatrix[0][0]) not in [lips.fields.ModP, lips.fields.PAdic]:
-            UniqueSolution[-1] = (float(Fraction(str(UniqueSolution[-1].real)).limit_denominator(10 ** 3)) + 1j *
-                                  float(Fraction(str(UniqueSolution[-1].imag)).limit_denominator(10 ** 3)))
-    return UniqueSolution[::-1]
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-
-
-def InversionUsingSingleGMPGaussianElimination(GMPMatrix, nInput):
-    dropped_redundant = GMPRowReduce(GMPMatrix)
-    UniqueSolution = GMPSolve(GMPMatrix, nInput, dropped_redundant)
-    Solution = OriginalSolution(nInput, dropped_redundant, UniqueSolution)
-
-    dropped_zero = [i for i, entry in enumerate(Solution) if (i not in dropped_redundant and
-                                                              (entry.real.makeFraction() == 0 or abs(entry.real.makeFraction()) < 10 ** -9) and
-                                                              (entry.imag.makeFraction() == 0 or abs(entry.imag.makeFraction()) < 10 ** -9))]
-
-    print("Nbr dropped redundant: {}, Nbr dropped zero: {}, Nbr dropped total: {}.".format(
-        len(dropped_redundant), len(dropped_zero), len(dropped_redundant) + len(dropped_zero)))
-    return Solution
-
-
-@timeit
-def GMPRowReduce(GMPMatrix):
-    """GMP row reduction from SpinorSolve"""
-    dropped = GMPMatrix.rowReduceInPlace()
-    return dropped
-
-
-def GMPSolve(GMPMatrix, nInput, dropped):  # This is rowreduced, but not strictly upper triangular
-    """Back substitution."""
-    UniqueSolution = []
-    for i in range(nInput - len(dropped))[::-1]:
-        UniqueRow = []
-        for j in range(nInput + 1):
-            if j not in dropped:
-                UniqueRow += [GMPMatrix[i, j]]
-        UniqueSolution += [(GMPMatrix[i, nInput] -
-                            sum(entry1 * entry2 for entry1, entry2 in zip(UniqueSolution, UniqueRow[::-1][1:]))) /
-                           UniqueRow[::-1][len(UniqueSolution) + 1]]
-    return UniqueSolution[::-1]
-
-
-def OriginalSolution(len_original_matrix, dropped, UniqueSolution):
-    # reconstruct the solution in terms of the original (non-minimal) ansatz
-    Solution = []
-    for i in range(len_original_matrix):
-        if i in dropped:
-            Solution.append(0)
-        else:
-            Solution.append(UniqueSolution.pop(0))
-    return Solution
-
-
-def GMPRationalise(complex_number):
-    if complex_number == 0:
-        real, imag = 0, 0
-    else:
-        real = complex_number.real.makeFraction()
-        imag = complex_number.imag.makeFraction()
-        if abs(real) < 10 ** -9:
-            real = 0
-        if abs(imag) < 10 ** -9:
-            imag = 0
-    return (real, imag)
+    for i in range(len(row_reduced_matrix[0]) - 1)[::-1]:
+        unique_solution += [(row_reduced_matrix[i][len(row_reduced_matrix[0]) - 1] -
+                            sum(entry1 * entry2 for entry1, entry2 in zip(unique_solution, row_reduced_matrix[i][::-1][1:]))) /
+                            row_reduced_matrix[i][::-1][len(unique_solution) + 1]]
+        if rounding is True and type(row_reduced_matrix[0][0]) not in [lips.fields.ModP, lips.fields.PAdic]:
+            unique_solution[-1] = (float(Fraction(str(unique_solution[-1].real)).limit_denominator(10 ** 3)) + 1j *
+                                   float(Fraction(str(unique_solution[-1].imag)).limit_denominator(10 ** 3)))
+    return unique_solution[::-1]
