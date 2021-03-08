@@ -52,7 +52,7 @@ def iterative_gaussian_solver(matrix, use_gpu=True, max_iterations=10, pivoting=
             last_dropped_redundant.remove(matrix.shape[0])  # augmented column is not redundant
 
         reduced_solution = row_reduced_matrix[:, -1].tolist()
-        last_dropped_zero = numpy.where(numpy.isclose(reduced_solution, 0))[0].tolist()
+        last_dropped_zero = numpy.where(numpy.isclose(list(map(complex, reduced_solution)), 0))[0].tolist()
         reduced_solution = numpy.array(reduced_solution)[numpy.ix_([i for i in range(len(reduced_solution)) if i not in last_dropped_zero])].tolist()
 
         if pivoting == 2:  # fix ordering --- not working well yet
@@ -90,8 +90,8 @@ def rationalise(complex_number):
         real = 0
         imag = 0
     else:
-        real = Fraction(complex_number.real).limit_denominator(10 ** 3)
-        imag = Fraction(complex_number.imag).limit_denominator(10 ** 3)
+        real = Fraction(str(complex_number.real)).limit_denominator(10 ** 3)
+        imag = Fraction(str(complex_number.imag)).limit_denominator(10 ** 3)
     return (real, imag)
 
 
