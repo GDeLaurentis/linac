@@ -6,7 +6,7 @@ import pytest
 
 from linac import cuda_row_reduce, row_reduce
 from linac.linear_algebra_tools import pivot_columns_from_row_reduced_echelon_form, drop_bottom_zero_rows, \
-    canonical_kernel_from_row_reduced_echelon_form, row_reduced_echelon_form_canonical_kernel
+    canonical_kernel_from_row_reduced_echelon_form, row_reduced_echelon_form_from_canonical_kernel
 
 local_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,10 +41,10 @@ def test_pivots_and_kernels(cached_matrix_relative_path, field_characteristic, u
     assert row_reduced_echelon_form.shape == known_rref_shape
     assert canonical_kernel.shape == known_ck_shape
     try:
-        check = numpy.isclose(row_reduced_echelon_form.astype('complex'), row_reduced_echelon_form_canonical_kernel(
+        check = numpy.isclose(row_reduced_echelon_form.astype('complex'), row_reduced_echelon_form_from_canonical_kernel(
             canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)).astype('complex')).all()
     except TypeError:
-        check = numpy.isclose(row_reduced_echelon_form.astype('int64'), row_reduced_echelon_form_canonical_kernel(
+        check = numpy.isclose(row_reduced_echelon_form.astype('int64'), row_reduced_echelon_form_from_canonical_kernel(
             canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form)).astype('int64')).all()
     assert check
     assert row_reduced_echelon_form.shape[1] == canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form).shape[0]

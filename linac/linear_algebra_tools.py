@@ -56,7 +56,7 @@ def canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form):
     return canonical_kernel
 
 
-def row_reduced_echelon_form_canonical_kernel(canonical_kernel):
+def row_reduced_echelon_form_from_canonical_kernel(canonical_kernel):
     """Returns the row reduced echelon form the kernel kernel."""
     identity = numpy.identity(canonical_kernel.shape[0] - canonical_kernel.shape[1], dtype=int)
     non_pivot_columns = non_pivot_columns_from_canonical_kernel(canonical_kernel)
