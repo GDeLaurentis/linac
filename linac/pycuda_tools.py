@@ -10,8 +10,6 @@
 # Author: Giuseppe
 # Created: 24/01/2019
 
-from __future__ import unicode_literals
-
 import math
 import re
 

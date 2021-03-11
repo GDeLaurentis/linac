@@ -4,10 +4,7 @@
 import os
 import math
 import time
-import pycuda.driver as cuda
-import pycuda.autoinit                     # noqa
 
-from pycuda.compiler import SourceModule   # noqa
 from linac.pycuda_tools import cuda_set_vars_and_get_funcs, number_of_foldings, folded_number_of_columns
 from linac.timeit_decorator import timeit
 
@@ -19,6 +16,10 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 
 @timeit
 def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
+
+    import pycuda.driver as cuda
+    import pycuda.autoinit                     # noqa
+    from pycuda.compiler import SourceModule   # noqa
 
     # Compile Cuda Code - sets Cuda* Functions
     NbrRows, NbrColumns = matrix.shape

@@ -4,9 +4,11 @@
 # Author: Giuseppe
 
 import mpmath
-import gmpTools
 
 from linac.timeit_decorator import timeit
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
 def single_iteration_gmp_solver(gmp_matrix, nInput):
@@ -73,10 +75,12 @@ def cgmp_to_mpc(cgmp_nbr):
 
 
 def mpc_to_cgmp(mpc_nbr):
+    import gmpTools
     return gmpTools.CGMP(str(mpc_nbr.real), str(mpc_nbr.imag))
 
 
 def mpc_matrix_to_gmp_matrix(matrix):
+    import gmpTools
     nRows, nColumns = matrix.shape
     gmp_matrix = gmpTools.GMPCmatrix(nRows, nColumns)  # build the gmptools matrix, this uses C++ code
     for i in range(nRows):
