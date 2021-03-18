@@ -9,10 +9,13 @@ setup(
     description='Linear Algebra with CUDA',
     packages=find_packages(),
     include_package_data=True,
-    # data_files=[('linac', [..., ...])],
     install_requires=[
         'numpy',
         'mpmath',
-        # 'pycuda',
     ],
+    extras_require={
+        'full': [
+            'pycuda',
+        ]
+    }
 )

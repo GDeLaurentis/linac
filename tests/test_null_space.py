@@ -8,10 +8,19 @@ from linac import cuda_row_reduce, row_reduce
 from linac.linear_algebra_tools import pivot_columns_from_row_reduced_echelon_form, drop_bottom_zero_rows, \
     canonical_kernel_from_row_reduced_echelon_form, row_reduced_echelon_form_from_canonical_kernel
 
+try:
+    import pycuda  # noqa
+except ImportError:
+    pycuda_found = False
+else:
+    pycuda_found = True
+
+
 local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 
 known_pivots_small_test_matrix = [0, 1, 2, 3, 4, 5]
 known_pivots_medium_test_matrix = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 38, 39, 40, 41, 59]
@@ -24,10 +33,10 @@ known_pivots_medium_test_matrix = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15
          known_pivots_small_test_matrix, (6, 7), (7, 1)),
         ('/test_data/small_kernel_test_matrix_2147483647.npy', 2147483647, False,
          known_pivots_small_test_matrix, (6, 7), (7, 1)),
-        ('/test_data/medium_kernel_test_matrix_mpc.npy', 0, True,
-         known_pivots_medium_test_matrix, (31, 86), (86, 55)),
-        ('/test_data/medium_kernel_test_matrix_2147483647.npy', 2147483647, True,
-         known_pivots_medium_test_matrix, (31, 86), (86, 55)),
+        pytest.param('/test_data/medium_kernel_test_matrix_mpc.npy', 0, True,
+                     known_pivots_medium_test_matrix, (31, 86), (86, 55), marks=pytest.mark.skipif(not pycuda_found, reason="pycuda not found")),
+        pytest.param('/test_data/medium_kernel_test_matrix_2147483647.npy', 2147483647, True,
+                     known_pivots_medium_test_matrix, (31, 86), (86, 55), marks=pytest.mark.skipif(not pycuda_found, reason="pycuda not found")),
     ]
 )
 def test_pivots_and_kernels(cached_matrix_relative_path, field_characteristic, use_cuda, known_pivots, known_rref_shape, known_ck_shape):

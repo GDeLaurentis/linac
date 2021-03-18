@@ -5,6 +5,13 @@ import pytest
 
 from linac.pycuda_row_reduce import cuda_row_reduce
 
+try:
+    import pycuda  # noqa
+except ImportError:
+    pycuda_found = False
+else:
+    pycuda_found = True
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
@@ -20,6 +27,7 @@ from linac.pycuda_row_reduce import cuda_row_reduce
         (2 ** 31 - 1, 3072),
     ]
 )
+@pytest.mark.skipif(not pycuda_found, reason="pycuda not found")
 def test_CUDA_row_reduce(field_characteristic, matrix_size, verbose=True):
     shape = (matrix_size, matrix_size)
     if field_characteristic == 0:  # random complex matrix

@@ -14,6 +14,14 @@ from lips.fields.finite_field import rationalise as rationalise_FF
 from linac.linear_system_solver import iterative_gaussian_solver, rationalise
 from linac.gmp_solver import mpc_matrix_to_gmp_matrix, single_iteration_gmp_solver, gmp_rationalise
 
+try:
+    import pycuda  # noqa
+except ImportError:
+    pycuda_found = False
+else:
+    pycuda_found = True
+
+
 local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -47,11 +55,18 @@ solutions = tuple([tuple(map(lambda x: Fraction(*x), entry)) for entry in rat_so
 @pytest.mark.parametrize(
     "cached_matrix_relative_path, field_characteristic, use_cuda, known_nbr_dropped_redundant, known_nbr_dropped_zero, known_rational_solution",
     [
-        ('/test_data/small_linear_system_matrix_redundant.npy', 0, True, 6, 0, solutions[0]),  # 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in [16] limit
-        ('/test_data/small_linear_system_matrix_non_redundant.npy', 0, True, 0, 6, solutions[0]),  # 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in s234 limit
-        ('/test_data/medium_linear_system_matrix_non_redundant.npy', 0, True, 0, 819, solutions[1]),  # 6pt split MHV tree, N/(⟨12⟩⟨16⟩[16]⟨23⟩⟨34⟩[34][45][56]s234s345) not in limit
-        ('/test_data/medium_linear_system_matrix_non_redundant_131071.npy', 131071, True, 0, 819, solutions[1]),  # as previous one, but over a FF
-        # ('/test_data/large_linear_system_matrix_non_redundant.npy', 0, True, 0, 3011, solutions[2]),  # ⟨12⟩[12]⟨34⟩[34]N/⟨1|3+4|2]⟨3|1+2|4]⟨5|1+2|6]Δ_135 (from 3mass triangle)
+        # from 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in [16] limit
+        ('/test_data/small_linear_system_matrix_redundant.npy', 0, False, 6, 0, solutions[0]),
+        # from 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in s234 limit
+        ('/test_data/small_linear_system_matrix_non_redundant.npy', 0, False, 0, 6, solutions[0]),
+        # from 6pt split MHV tree, N/(⟨12⟩⟨16⟩[16]⟨23⟩⟨34⟩[34][45][56]s234s345) not in limit
+        pytest.param('/test_data/medium_linear_system_matrix_non_redundant.npy', 0, True, 0, 819, solutions[1],
+                     marks=pytest.mark.skipif(not pycuda_found, reason="pycuda not found")),
+        # as previous one, but over a FF
+        pytest.param('/test_data/medium_linear_system_matrix_non_redundant_131071.npy', 131071, True, 0, 819, solutions[1],
+                     marks=pytest.mark.skipif(not pycuda_found, reason="pycuda not found")),
+        # from ⟨12⟩[12]⟨34⟩[34]N/⟨1|3+4|2]⟨3|1+2|4]⟨5|1+2|6]Δ_135 (6g/pmpmpm 3mass triangle) - commented out, chached matrix is too big to commit to git
+        # ('/test_data/large_linear_system_matrix_non_redundant.npy', 0, True, 0, 3011, solutions[2]),
     ]
 )
 def test_iterative_linear_solver(cached_matrix_relative_path, field_characteristic, use_cuda, known_nbr_dropped_redundant, known_nbr_dropped_zero, known_rational_solution):
