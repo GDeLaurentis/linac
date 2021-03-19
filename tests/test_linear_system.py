@@ -21,6 +21,13 @@ except ImportError:
 else:
     pycuda_found = True
 
+try:
+    import gmpTools_found
+except ImportError:
+    gmpTools_found = False
+else:
+    gmpTools_found = True
+
 
 local_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -96,6 +103,7 @@ def test_iterative_linear_solver(cached_matrix_relative_path, field_characterist
         ('/test_data/small_linear_system_matrix_non_redundant.npy', 0, 6, solutions[0]),  # 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in s234 limit
     ]
 )
+@pytest.mark.skipif(not gmpTools_found, reason="gmpTools not found")
 def test_gmp_linear_solver(cached_matrix_relative_path, known_nbr_dropped_redundant, known_nbr_dropped_zero, known_rational_solution):
     matrix = numpy.load(local_directory + cached_matrix_relative_path, allow_pickle=True)
     nInput = matrix.shape[0]
