@@ -7,7 +7,6 @@
 import numpy
 
 from linac.timeit_decorator import timeit
-from lips.fields.finite_field import ModP
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -58,7 +57,10 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
 
         if abs(matrix[i][j]) > threshold:
             if prime is not None:
-                matrix[i, :] = matrix[i, :] * int(ModP(matrix[i][j], prime)._inv()) % prime
+                s, t, gcd = extended_euclideal_algorithm(matrix[i][j], prime)
+                if gcd != 1:
+                    raise ZeroDivisionError("Inverse of {} mod {} does not exist. Are you sure {} is prime?".format(matrix[i][j], prime, prime))
+                matrix[i, :] = matrix[i, :] * s % prime
             else:
                 matrix[i, :] = matrix[i, :] / matrix[i][j]
             matrix[i + 1:, j:] = matrix[i + 1:, j:] - matrix[i + 1:, j: j + 1] * matrix[i: i + 1, j:]
@@ -72,6 +74,28 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
             matrix[:, j:] = matrix[:, j:] % prime
 
     return matrix, variable_order
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+def extended_euclideal_algorithm(a, b):
+    """Returns Bezout coefficients (s,t) and gcd(a,b) such that: as+bt=gcd(a,b). - Pseudocode from https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm"""
+    (old_r, r) = (a, b)
+    (old_s, s) = (1, 0)
+    (old_t, t) = (0, 1)
+
+    while r != 0:
+        quotient = old_r // r
+        (old_r, r) = (r, old_r - quotient * r)
+        (old_s, s) = (s, old_s - quotient * s)
+        (old_t, t) = (t, old_t - quotient * t)
+
+    # output "Bézout coefficients:", (old_s, old_t)
+    # output "greatest common divisor:", old_r
+    # output "quotients by the gcd:", (t, s)
+
+    return (old_s, old_t, old_r)
 
 
 # Old parallelised code, however it's faster to use numpy built-in slicing

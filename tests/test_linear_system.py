@@ -22,7 +22,7 @@ else:
     pycuda_found = True
 
 try:
-    import gmpTools_found
+    import gmpTools  # noqa
 except ImportError:
     gmpTools_found = False
 else:

@@ -6,7 +6,6 @@
 
 import bisect
 import numpy
-import lips
 
 from fractions import Fraction
 from linac.row_reduce import row_reduce
@@ -108,7 +107,7 @@ def solve(row_reduced_matrix, rounding=True):
         unique_solution += [(row_reduced_matrix[i][len(row_reduced_matrix[0]) - 1] -
                             sum(entry1 * entry2 for entry1, entry2 in zip(unique_solution, row_reduced_matrix[i][::-1][1:]))) /
                             row_reduced_matrix[i][::-1][len(unique_solution) + 1]]
-        if rounding is True and type(row_reduced_matrix[0][0]) not in [lips.fields.ModP, lips.fields.PAdic]:
+        if rounding is True and type(row_reduced_matrix[0][0]).__name__ not in ["ModP", "PAdic"]:
             unique_solution[-1] = (float(Fraction(str(unique_solution[-1].real)).limit_denominator(10 ** 3)) + 1j *
                                    float(Fraction(str(unique_solution[-1].imag)).limit_denominator(10 ** 3)))
     return unique_solution[::-1]
