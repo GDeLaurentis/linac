@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: GDeLaurentis/lips-dev
-        token: ${{ secrets.GitHub_PAT }}
+        token: ${{ secrets.GitHubActions_PAT }}
         path: lips-dev
     - name: Install dependencies
       run: |
