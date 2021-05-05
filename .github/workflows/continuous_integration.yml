@@ -46,11 +46,11 @@ jobs:
         pytest |& tee coverage.txt
     - name: Run update-badges script
       run: |
-        cd github_badges
+        cd linac-dev
         python update-badges.py
     - name: Update badges and commit README.md
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         file_pattern: README.md
-        repository: github_badges
+        repository: linac-dev
         commit_message: "Automatic badge update"
