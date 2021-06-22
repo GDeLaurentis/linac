@@ -1,8 +1,7 @@
 # Linear Algebra with CUDA
 
 [![Continuous Integration Status](https://github.com/GDeLaurentis/linac-dev/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions)
-[![Coverage](https://img.shields.io/badge/Coverage-0%25-red?labelColor=2a2f35)](https://github.com/GDeLaurentis/linac-dev/actions)
-
+[![Coverage](https://img.shields.io/badge/Coverage-60%25-orange?labelColor=2a2f35)](https://github.com/GDeLaurentis/linac-dev/actions)
 ## Requirements
 ```
 numpy, mpmath, pycuda (optional)
