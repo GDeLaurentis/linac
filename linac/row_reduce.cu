@@ -30,9 +30,9 @@ __device__ int tollerance = 0;
 #else
 __device__ double tollerance = 0.000000001; // 10^-9
 __device__ double RowScales[8192]; // 2^13
+#endif
 __device__ int IndexOfMaximum = 0;
 __device__ int IndicesOfMaxiumCandidates[16];
-#endif
 
 // DEVICE FUNCTIONS
 
@@ -50,13 +50,12 @@ __global__ void IncrementCounters ();
 __global__ void CompareHeadToTollerance (matrix_type *Matrix);
 __global__ void ConditionalRescaleRow (matrix_type *Matri);
 __global__ void ConditionalRowReduce (matrix_type *Matrix);
-#if FIELD_CHARACTERISTIC == 0
-__global__ void SetRowScales (matrix_type *Matrix);
-__global__ void RescaleRows (matrix_type *Matrix);
 __global__ void SwitchRows (matrix_type *Matrix);
 __global__ void ThreadsReduceToMaxIndex (matrix_type *Matrix);
 __global__ void BlocksReduceToMaxIndex (matrix_type *Matrix);
-#else
+#if FIELD_CHARACTERISTIC == 0
+__global__ void SetRowScales (matrix_type *Matrix);
+__global__ void RescaleRows (matrix_type *Matrix);
 #endif
 
 
@@ -229,32 +228,47 @@ __global__ void RescaleRows (matrix_type *Matrix) {
 	}
     }
 }
+#endif
 
 __global__ void SwitchRows(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
     int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
+    // if (threadIdx.x == 0) {
+    // printf("Switching rows %d and %d. Max value: %i. \\n ", i, IndexOfMaximum, Matrix[id_j + j]);
+    // }
     if (id_j < (IndexOfMaximum + 1) * NbrColumns && id_i < MaxMatrixId && id_j < MaxMatrixId) {
-	pycuda::complex<double> temporary = Matrix[id_i];
+	matrix_type temporary = Matrix[id_i];
 	Matrix[id_i] = Matrix[id_j];
 	Matrix[id_j] = temporary;
     }
 }
 
 __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
+#if FIELD_CHARACTERISTIC == 0
     __shared__ double sdata[1024];
+#else
+    __shared__ matrix_type sdata[1024];
+#endif
     __shared__ int idata[1024];
 
     // blockDim is (len+1)/2
+    
     int NbrFoldings = gridDim.x;
     int tid = threadIdx.x;
+    sdata[tid] = 0;
     int RowId1 = tid + i;                      // ColumnId is always j
     int RowId2 = RowId1 + blockDim.x;          // ColumnId is always j
     int MatrixId1 = RowId1 * NbrColumns + j;
     int MatrixId2 = RowId2 * NbrColumns + j;
     if (RowId2 < NbrRows) {
+#if FIELD_CHARACTERISTIC == 0
 	double value1 = abs(Matrix[MatrixId1]);
 	double value2 = abs(Matrix[MatrixId2]);
+#else
+	matrix_type value1 = Matrix[MatrixId1];
+	matrix_type value2 = Matrix[MatrixId2];	
+#endif
 	if (value1 > value2){
 	    idata[tid] = RowId1;
 	    sdata[tid] = value1;
@@ -264,7 +278,11 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
 	}
     } else if (RowId1 < NbrRows) {
 	idata[tid] = RowId1;
+#if FIELD_CHARACTERISTIC == 0
 	sdata[tid] = abs(Matrix[MatrixId1]);
+#else
+	sdata[tid] = Matrix[MatrixId1];
+#endif
     }
     __syncthreads();
 
@@ -284,7 +302,11 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
 }
 
 __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
+#if FIELD_CHARACTERISTIC == 0
     __shared__ double sdata[8];
+#else
+    __shared__ matrix_type sdata[8];
+#endif
     __shared__ int idata[8];
     // int NbrCandidates = blockDim.x;
     int tid = threadIdx.x;
@@ -293,8 +315,13 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     int MatrixId1 = RowId1 * NbrColumns + j;
     int MatrixId2 = RowId2 * NbrColumns + j;
     if (MatrixId2 < MaxMatrixId && RowId2 >= i) {
+#if FIELD_CHARACTERISTIC == 0
 	double value1 = abs(Matrix[MatrixId1]);
 	double value2 = abs(Matrix[MatrixId2]);
+#else
+	matrix_type value1 = Matrix[MatrixId1];
+	matrix_type value2 = Matrix[MatrixId2];
+#endif
 	if (value1 > value2){
 	    idata[tid] = RowId1;
 	    sdata[tid] = value1;
@@ -303,8 +330,12 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
 	    sdata[tid] = value2;
 	}
     } else if (MatrixId1 < MaxMatrixId && RowId1 >= i) {
-	sdata[tid] = abs(Matrix[MatrixId1]);
 	idata[tid] = RowId1;
+#if FIELD_CHARACTERISTIC == 0
+	sdata[tid] = abs(Matrix[MatrixId1]);
+#else
+	sdata[tid] = Matrix[MatrixId1];
+#endif
     }
 
     for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
@@ -320,7 +351,6 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     }
   
 }
-#endif
 
 __global__ void IncrementCounters () {
     if (bHeadIsBiggerThanTollerance) {

@@ -47,13 +47,13 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
         time_on_gpu += [-time.time()]
 
         time_pivoting += [-time.time()]
-        if field_characteristic == 0:  # Scaled Partial Pivoting
-            CudaThreadsReduceToMaxIndex(matrix_gpu,  # noqa
-                                        block=(int(math.ceil(folded_number_of_columns(NbrRows, FoldingMaxLength=2048) / 2.0)), 1, 1),
-                                        grid=(number_of_foldings(NbrRows, FoldingMaxLength=2048), 1))
-            if number_of_foldings(NbrRows, FoldingMaxLength=2048) > 1:
-                CudaBlocksReduceToMaxIndex(matrix_gpu, block=(int(math.ceil(number_of_foldings(NbrRows, FoldingMaxLength=2048) / 2)), 1, 1), grid=(1, 1))  # noqa
-            CudaSwitchRows(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(number_of_foldings(NbrColumns), 1))  # noqa
+        # Scaled Partial Pivoting - for finite fields partial rook pivoting would be equally good
+        CudaThreadsReduceToMaxIndex(matrix_gpu,  # noqa
+                                    block=(int(math.ceil(folded_number_of_columns(NbrRows, FoldingMaxLength=2048) / 2.0)), 1, 1),
+                                    grid=(number_of_foldings(NbrRows, FoldingMaxLength=2048), 1))
+        if number_of_foldings(NbrRows, FoldingMaxLength=2048) > 1:
+            CudaBlocksReduceToMaxIndex(matrix_gpu, block=(int(math.ceil(number_of_foldings(NbrRows, FoldingMaxLength=2048) / 2)), 1, 1), grid=(1, 1))  # noqa
+        CudaSwitchRows(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(number_of_foldings(NbrColumns), 1))  # noqa
         time_pivoting[-1] += time.time()
 
         time_compare += [-time.time()]
