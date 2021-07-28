@@ -5,6 +5,7 @@
 # Created: 10/07/2018 - Updated: 12/02/2021
 
 import numpy
+import fractions
 
 from linac.timeit_decorator import timeit
 
@@ -33,6 +34,8 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
         row_scales = abs(matrix).max(axis=1, keepdims=True)
         matrix = matrix / row_scales
     if prime is not None:
+        if matrix.dtype is numpy.dtype(object):  # if dtype is object make sure all fractions are converted to the correct finite field value
+            matrix = numpy.vectorize(lambda x: (x.numerator * extended_euclideal_algorithm(x.denominator, prime)[0]) % prime if isinstance(x, fractions.Fraction) else x)(matrix)
         matrix = matrix.astype('int64')
 
     while i < matrix.shape[0] and j < matrix.shape[1]:
