@@ -70,7 +70,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
         time_increment += [-time.time()]
         # Increment Mirrored Counters
-        CudaIncrementCounters(matrix_gpu, block=(1, 1, 1), grid=(1, 1))  # noqa
+        CudaIncrementCounters(block=(1, 1, 1), grid=(1, 1))  # noqa
         time_increment[-1] += time.time()
 
         time_on_gpu[-1] += time.time()
