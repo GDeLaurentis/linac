@@ -76,7 +76,7 @@ def invert_permutation(permutation):
     return tuple(numpy.argsort(permutation))
 
 
-def permutation_to_permutation_matrix(permutation):
+def permutation_matrix_from_permutation(permutation):
     """Permutation (as list of indices) to permutation matrix."""
     permutation_matrix = numpy.zeros((len(permutation), len(permutation)))
     for i, index in enumerate(permutation):
