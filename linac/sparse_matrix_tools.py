@@ -28,8 +28,8 @@ def coo_from_matrix(matrix):
             if value == 0:
                 continue
             coo[(row_index, column_index)] = value
-    if (rows != max([row for row, column in coo.keys()]) + 1 or 
-        columns != max([column for row, column in coo.keys()]) + 1):
+    if (rows != max([row for row, column in coo.keys()]) + 1 or
+       columns != max([column for row, column in coo.keys()]) + 1):
         coo[(rows - 1, columns - 1)] = matrix[rows - 1, columns - 1]
     return coo
 
