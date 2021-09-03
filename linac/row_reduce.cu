@@ -303,11 +303,11 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
 
 __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
 #if FIELD_CHARACTERISTIC == 0
-    __shared__ double sdata[8];
+    __shared__ double sdata[256];
 #else
-    __shared__ matrix_type sdata[8];
+    __shared__ matrix_type sdata[256];
 #endif
-    __shared__ int idata[8];
+    __shared__ int idata[256];
     // int NbrCandidates = blockDim.x;
     int tid = threadIdx.x;
     int RowId1 = IndicesOfMaxiumCandidates[tid * 2];
