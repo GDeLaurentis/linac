@@ -66,3 +66,19 @@ def row_reduced_echelon_form_from_canonical_kernel(canonical_kernel):
     permutation = [(pivot_columns + non_pivot_columns).index(index) for index in range(len(pivot_columns + non_pivot_columns))]
     rref = scrambled_row_reduced_echelon_form[:, permutation]  # interweave left identity
     return rref
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+def invert_permutation(permutation):
+    """Returns the inverse of permutation (requires input and output as tuples of indices)"""
+    return tuple(numpy.argsort(permutation))
+
+
+def permutation_to_permutation_matrix(permutation):
+    """Permutation (as list of indices) to permutation matrix."""
+    permutation_matrix = numpy.zeros((len(permutation), len(permutation)))
+    for i, index in enumerate(permutation):
+        permutation_matrix[i, index] = 1
+    return permutation_matrix
