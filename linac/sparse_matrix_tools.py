@@ -49,7 +49,7 @@ def matrix_from_json_coo(file_name, dtype=Fraction):
     data = json.load(open(file_name))
     coo = {}
     for key in data.keys():
-        coo[eval(key)] = Fraction(data[key])
+        coo[eval(key)] = dtype(data[key])
     matrix = matrix_from_coo(coo)
     return matrix
 

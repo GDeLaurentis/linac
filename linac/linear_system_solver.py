@@ -22,7 +22,7 @@ from linac.linear_algebra_tools import non_pivot_columns_from_row_reduced_echelo
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-def iterative_gaussian_solver(matrix, use_gpu=True, max_iterations=10, pivoting=1, scaling=True, field_characteristic=0, verbose=True):
+def iterative_gaussian_solver(matrix, use_gpu=True, max_iterations=1, pivoting=1, scaling=True, field_characteristic=0, verbose=True):
 
     assert matrix.shape[0] + 1 == matrix.shape[1]
     nbr_unknowns = matrix.shape[0]
