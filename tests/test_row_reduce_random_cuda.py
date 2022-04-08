@@ -28,7 +28,7 @@ else:
     ]
 )
 @pytest.mark.skipif(not pycuda_found, reason="pycuda not found")
-def test_CUDA_row_reduce(field_characteristic, matrix_size, verbose=True):
+def test_cuda_row_reduce(field_characteristic, matrix_size, verbose=True):
     shape = (matrix_size, matrix_size)
     if field_characteristic == 0:  # random complex matrix
         random_float_matrix1, random_float_matrix2 = numpy.random.rand(*shape), numpy.random.rand(*shape)
