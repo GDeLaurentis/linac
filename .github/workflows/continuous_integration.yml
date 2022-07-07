@@ -15,7 +15,8 @@ jobs:
   test:
     # Use ubuntu-latest for remote github's cpu machine
     # Requires removing [full] from linac-dev to avoid attempting to install pycuda
-    runs-on: [self-hosted, gpu]
+    runs-on: ubuntu-latest
+    # runs-on: [self-hosted, gpu]
 
     steps:
     - name: Set up Python 3.9
@@ -34,14 +35,14 @@ jobs:
         path: lips-dev
     - name: Install dependencies
       run: |
-        # Make sure CUDA can be found
-        export PATH="/usr/local/cuda-11.4/bin:${PATH}"
-        export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
-        echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version
+        # Make sure CUDA can be found - this might not be needed with cuda-devel docker image
+        # export PATH="/usr/local/cuda-11.4/bin:${PATH}"
+        # export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
+        # echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version
         # Install dependancies
         python -m pip install --upgrade pip
         pip install flake8 pytest pytest-cov
-        pip install -e linac-dev[full]
+        pip install -e linac-dev  # [full]
         pip install -e lips-dev
     - name: Lint with flake8
       run: |
