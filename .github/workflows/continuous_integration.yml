@@ -52,6 +52,9 @@ jobs:
       run: |
         cd linac-dev
         pytest |& tee coverage.txt
+    - name: Instal post-test requirements
+      run: |
+        sudo apt-get install git
     - name: Run update-badges script
       run: |
         cd linac-dev
