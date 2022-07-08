@@ -5,7 +5,7 @@
 
 ## Requirements
 ```
-numpy, mpmath, pycuda (optional)
+numpy, mpmath, pycuda (optional), gmpTools (optional)
 ```
 
 ## Installation
