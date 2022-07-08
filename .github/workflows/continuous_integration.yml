@@ -33,13 +33,13 @@ jobs:
         repository: GDeLaurentis/lips-dev
         token: ${{ secrets.GitHubActions_PAT }}
         path: lips-dev
+    - name: Make CUDA discoverable
+      run: |
+        export PATH="/usr/local/cuda-11.4/bin:${PATH}"
+        export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
+        echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version && nvidia-smi
     - name: Install dependencies
       run: |
-        # Make sure CUDA can be found - this might not be needed with cuda-devel docker image
-        # export PATH="/usr/local/cuda-11.4/bin:${PATH}"
-        # export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
-        # echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version
-        # Install dependancies
         python -m pip install --upgrade pip
         pip install flake8 pytest pytest-cov
         pip install -e linac-dev[full]
