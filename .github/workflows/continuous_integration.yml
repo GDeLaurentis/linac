@@ -35,9 +35,11 @@ jobs:
         path: lips-dev
     - name: Make CUDA discoverable
       run: |
+        export CPATH="/usr/local/cuda-11.4/targets/x86_64-linux/include:${CPATH}"
         export PATH="/usr/local/cuda-11.4/bin:${PATH}"
         export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
         echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version && nvidia-smi
+        locate pyconfig.h
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
