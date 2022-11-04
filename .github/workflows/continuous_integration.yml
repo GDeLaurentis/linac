@@ -20,7 +20,7 @@ jobs:
 
     steps:
     - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9-dev
     - name: Checkout this Repo (linac-dev)
@@ -38,6 +38,7 @@ jobs:
         export PATH="/usr/local/cuda-11.4/bin:${PATH}"
         export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
         echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version && nvidia-smi
+        echo locate pyconfig.h
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
