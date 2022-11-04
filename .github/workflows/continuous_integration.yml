@@ -38,7 +38,7 @@ jobs:
         export PATH="/usr/local/cuda-11.4/bin:${PATH}"
         export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
         echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version && nvidia-smi
-        echo locate pyconfig.h
+        locate pyconfig.h
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
