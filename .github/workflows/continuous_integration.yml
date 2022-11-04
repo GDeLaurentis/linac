@@ -19,10 +19,10 @@ jobs:
     runs-on: [self-hosted]
 
     steps:
-    - name: Set up Python 3.9
+    - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9-dev
+        python-version: 3.8-dev
     - name: Checkout this Repo (linac-dev)
       uses: actions/checkout@v2
       with:
@@ -39,7 +39,7 @@ jobs:
         export PATH="/usr/local/cuda-11.4/bin:${PATH}"
         export LD_LIBRARY_PATH="/usr/local/cuda-11.4/lib64:${LD_LIBRARY_PATH}"
         echo "$PATH" && echo "$LD_LIBRARY_PATH" && nvcc --version && nvidia-smi
-        ls /usr/include/
+        ls /usr/include/python3.8
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
