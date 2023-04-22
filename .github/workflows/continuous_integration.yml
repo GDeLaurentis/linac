@@ -21,11 +21,11 @@ jobs:
     steps:
     - name: Update packages
       run: |
-        sudo apt-get update
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
+        apt-get update
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Checkout this Repo (linac-dev)
       uses: actions/checkout@v2
       with:
