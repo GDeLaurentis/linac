@@ -19,9 +19,6 @@ jobs:
     runs-on: [self-hosted]
 
     steps:
-    - name: Update packages
-      run: |
-        apt-get update
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
