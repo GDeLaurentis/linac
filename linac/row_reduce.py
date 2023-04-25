@@ -7,7 +7,9 @@
 import numpy
 import fractions
 
-from linac.timeit_decorator import timeit
+from pyadic.finite_field import extended_euclideal_algorithm
+
+from .timeit_decorator import timeit
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -77,37 +79,3 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
             matrix[:, j:] = matrix[:, j:] % prime
 
     return matrix, variable_order
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-
-
-def extended_euclideal_algorithm(a, b):
-    """Returns Bezout coefficients (s,t) and gcd(a,b) such that: as+bt=gcd(a,b). - Pseudocode from https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm"""
-    (old_r, r) = (a, b)
-    (old_s, s) = (1, 0)
-    (old_t, t) = (0, 1)
-
-    while r != 0:
-        quotient = old_r // r
-        (old_r, r) = (r, old_r - quotient * r)
-        (old_s, s) = (s, old_s - quotient * s)
-        (old_t, t) = (t, old_t - quotient * t)
-
-    # output "Bézout coefficients:", (old_s, old_t)
-    # output "greatest common divisor:", old_r
-    # output "quotients by the gcd:", (t, s)
-
-    return (old_s, old_t, old_r)
-
-
-# Old parallelised code, however it's faster to use numpy built-in slicing
-#
-# RowReducePartial = functools.partial(RowReduceInner, matrix[i, j:])
-# matrix[i + 1:, j:] = numpy.reshape(numpy.array(list(mapThreads(RowReducePartial, matrix[i + 1:, j:], verbose=False, UseParallelisation=False)), dtype=object), matrix[i + 1:, j:].shape)
-# if reduced_echelon is True:
-#     matrix[:i, j:] = numpy.reshape(numpy.array(list(mapThreads(RowReducePartial, matrix[:i, j:], verbose=False, UseParallelisation=False)), dtype=object), matrix[:i, j:].shape)
-
-# def RowReduceInner(row1, row2):
-#     return row2 - row2[0] * row1
-#     return [entry2 - row2[0] * entry1 for (entry1, entry2) in zip(row1, row2)]

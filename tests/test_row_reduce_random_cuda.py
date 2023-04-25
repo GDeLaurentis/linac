@@ -40,4 +40,4 @@ def test_cuda_row_reduce(field_characteristic, matrix_size, verbose=True):
     if field_characteristic == 0:
         assert numpy.all(numpy.isclose(row_reduced_random_matrix - numpy.identity(matrix_size), numpy.zeros((matrix_size, matrix_size))))
     else:
-        numpy.all(row_reduced_random_matrix == numpy.identity(matrix_size, dtype=int))
+        assert numpy.all(row_reduced_random_matrix == numpy.identity(matrix_size, dtype=int))

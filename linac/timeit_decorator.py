@@ -16,7 +16,7 @@ def timeit(func):
         s, ms = divmod(seconds * 1000, 1000)
         m, s = divmod(seconds, 60)
         h, m = divmod(m, 60)
-        if "verbose" in kwargs.keys() and kwargs["verbose"] == True:
+        if "verbose" in kwargs.keys() and kwargs["verbose"] is True:
             print("\rTime elapsed in %s: %d:%02d:%02d:%03d.                                        " % (func.__name__, h, m, s, ms))
         return value
     return wrapper_timeit

@@ -83,14 +83,14 @@ def iterative_gaussian_solver(matrix, use_gpu=True, max_iterations=1, pivoting=1
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-def rationalise(complex_number):
-    """Approximate map from R to Q"""
+def rationalise(complex_number, denominator_limit=10 ** 3):
+    r"""Approximate map from $\mathbb{C}$ to $\mathbb{Q}[i]$"""
     if complex_number == 0:
         real = 0
         imag = 0
     else:
-        real = Fraction(str(complex_number.real)).limit_denominator(10 ** 3)
-        imag = Fraction(str(complex_number.imag)).limit_denominator(10 ** 3)
+        real = Fraction(str(complex_number.real)).limit_denominator(denominator_limit)
+        imag = Fraction(str(complex_number.imag)).limit_denominator(denominator_limit)
     return (real, imag)
 
 
