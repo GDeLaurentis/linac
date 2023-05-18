@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'numpy',
         'mpmath',
+        'pyadic',
     ],
     extras_require={
         'full': [
