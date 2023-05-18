@@ -36,6 +36,7 @@ On an RTX 2080 Ti 11Gb (on Merlin cluster)
 |    16384    |        51        |
 |    32768    |       391        |
 |    40000    |       793        |
+|    50000    |      1899        |
 
 ## Theoretical Size Limit
 
