@@ -7,6 +7,7 @@ import pytest
 from linac import cuda_row_reduce, row_reduce
 from linac.linear_algebra_tools import pivot_columns_from_row_reduced_echelon_form, drop_bottom_zero_rows, \
     canonical_kernel_from_row_reduced_echelon_form, row_reduced_echelon_form_from_canonical_kernel
+from linac.sparse_matrix_tools import matrix_from_json_coo
 
 try:
     import pycuda  # noqa
@@ -59,3 +60,8 @@ def test_pivots_and_kernels(cached_matrix_relative_path, field_characteristic, u
     assert row_reduced_echelon_form.shape[1] == canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form).shape[0]
     assert row_reduced_echelon_form.shape[0] + canonical_kernel_from_row_reduced_echelon_form(row_reduced_echelon_form).shape[1] == row_reduced_echelon_form.shape[1]
     assert pivot_columns_from_row_reduced_echelon_form(row_reduced_echelon_form) == known_pivots
+
+
+def test_pivots_and_kernels_with_large_fractions():
+    rref = matrix_from_json_coo(local_directory + "/test_data/test_coo_large_fractions.json")
+    assert numpy.all(rref == row_reduced_echelon_form_from_canonical_kernel(canonical_kernel_from_row_reduced_echelon_form(rref)))
