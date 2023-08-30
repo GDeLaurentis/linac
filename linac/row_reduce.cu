@@ -17,11 +17,11 @@ typedef pycuda::complex<double> matrix_type;
 
 // DEVICE VARIABLES
 
-__device__ int NbrRows = NBR_ROWS;
-__device__ int NbrColumns = NBR_COLUMNS;
-__device__ int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
-__device__ int i = 0;  // row counter
-__device__ int j = 0;  // column counter
+__device__ __constant__ unsigned long int NbrRows = static_cast<unsigned long int>(NBR_ROWS);
+__device__ __constant__ unsigned long int NbrColumns = static_cast<unsigned long int>(NBR_COLUMNS);
+__device__ __constant__ unsigned long int MaxMatrixId = static_cast<unsigned long int>(NBR_ROWS) * static_cast<unsigned long int>(NBR_COLUMNS);
+__device__ unsigned long int i = 0;  // row counter
+__device__ unsigned long int j = 0;  // column counter
 __device__ bool bHeadIsBiggerThanTollerance = true;
 
 #if FIELD_CHARACTERISTIC > 0
@@ -31,8 +31,8 @@ __device__ int tollerance = 0;
 __device__ double tollerance = 0.000000001; // 10^-9
 __device__ double RowScales[8192]; // 2^13
 #endif
-__device__ int IndexOfMaximum = 0;
-__device__ int IndicesOfMaxiumCandidates[16];
+__device__ unsigned int IndexOfMaximum = 0;
+__device__ unsigned int IndicesOfMaxmiumCandidates[128];
 
 // DEVICE FUNCTIONS
 
@@ -107,7 +107,7 @@ __device__ int Inverse (int a) {
 }
 
 __device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
-    return (a * b) % prime;
+    return static_cast<unsigned int>((a * b) % prime);
 }
 
 __device__ unsigned int ModP (int a) {
@@ -121,9 +121,9 @@ __device__ unsigned int ModP (int a) {
 
 __device__ void RescaleRow(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
-    int id_i_head = i * NbrColumns + j;
-    int MaxId = (i + 1) * NbrColumns;
-    int id = i * NbrColumns + FoldingLength * blockIdx.x + threadIdx.x;
+    unsigned long int id_i_head = i * NbrColumns + j;
+    unsigned long int MaxId = (i + 1) * NbrColumns;
+    unsigned long int id = i * NbrColumns + FoldingLength * blockIdx.x + threadIdx.x;
     if (id < MaxId) {
 #if FIELD_CHARACTERISTIC > 0
 	Matrix[id] = Product64(Matrix[id], Inverse(Matrix[id_i_head]));
@@ -136,11 +136,11 @@ __device__ void RescaleRow(matrix_type *Matrix) {
 __device__ void RowReduce(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
     int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
-    int id_j_head = blockIdx.x * NbrColumns + j;
-    int idMax = (blockIdx.x + 1) * NbrColumns;
+    unsigned long int id_j_head = blockIdx.x * NbrColumns + j;
+    unsigned long int idMax = (blockIdx.x + 1) * NbrColumns;
     for (int s = 0; s < NbrFoldings; s++) {
-	int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
-	int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
+	unsigned long int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
+	unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
 	if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
 	    #if FIELD_CHARACTERISTIC > 0
 	    Matrix[id] = ModP(Matrix[id] - Product64(Matrix[id_i], Matrix[id_j_head]));
@@ -232,8 +232,8 @@ __global__ void RescaleRows (matrix_type *Matrix) {
 
 __global__ void SwitchRows(matrix_type *Matrix) {
     int FoldingLength = blockDim.x;
-    int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
-    int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
+    unsigned long int id_i = i * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
+    unsigned long int id_j = IndexOfMaximum * NbrColumns + blockIdx.x * FoldingLength + threadIdx.x;
     // if (threadIdx.x == 0) {
     // printf("Switching rows %d and %d. Max value: %i. \\n ", i, IndexOfMaximum, Matrix[id_j + j]);
     // }
@@ -259,8 +259,8 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
     sdata[tid] = 0;
     int RowId1 = tid + i;                      // ColumnId is always j
     int RowId2 = RowId1 + blockDim.x;          // ColumnId is always j
-    int MatrixId1 = RowId1 * NbrColumns + j;
-    int MatrixId2 = RowId2 * NbrColumns + j;
+    unsigned long int MatrixId1 = RowId1 * NbrColumns + j;
+    unsigned long int MatrixId2 = RowId2 * NbrColumns + j;
     if (RowId2 < NbrRows) {
 #if FIELD_CHARACTERISTIC == 0
 	double value1 = abs(Matrix[MatrixId1]);
@@ -297,7 +297,7 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
     if (tid == 0 && NbrFoldings == 1){
 	IndexOfMaximum = idata[0];
     } else if (tid == 0) {
-	IndicesOfMaxiumCandidates[blockIdx.x] = idata[0];
+	IndicesOfMaxmiumCandidates[blockIdx.x] = idata[0];
     }
 }
 
@@ -310,10 +310,10 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     __shared__ int idata[256];
     // int NbrCandidates = blockDim.x;
     int tid = threadIdx.x;
-    int RowId1 = IndicesOfMaxiumCandidates[tid * 2];
-    int RowId2 =  IndicesOfMaxiumCandidates[tid * 2 + 1];
-    int MatrixId1 = RowId1 * NbrColumns + j;
-    int MatrixId2 = RowId2 * NbrColumns + j;
+    int RowId1 = IndicesOfMaxmiumCandidates[tid * 2];
+    int RowId2 =  IndicesOfMaxmiumCandidates[tid * 2 + 1];
+    unsigned long int MatrixId1 = RowId1 * NbrColumns + j;
+    unsigned long int MatrixId2 = RowId2 * NbrColumns + j;
     if (MatrixId2 < MaxMatrixId && RowId2 >= i) {
 #if FIELD_CHARACTERISTIC == 0
 	double value1 = abs(Matrix[MatrixId1]);
@@ -362,7 +362,8 @@ __global__ void IncrementCounters () {
 }
 
 __global__ void CompareHeadToTollerance(matrix_type *Matrix) {
-    int MatrixId = i * NbrColumns + j;
+    unsigned long int MatrixId = i * NbrColumns + j;
+    // printf("Head MatrixId %li. \\n ", MatrixId);
 #if FIELD_CHARACTERISTIC > 0
     if (MatrixId < MaxMatrixId && Matrix[MatrixId] != 0) {
 #else
