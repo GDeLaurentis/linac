@@ -18,6 +18,12 @@ import re
 
 
 def cuda_set_vars_and_get_funcs(path_to_cuda_script=None, **kwargs):
+    if 'cache_dir' in kwargs.keys():
+        # default appears to be ~/.cache/pycuda/compiler-cache-v1
+        cache_dir = kwargs.pop('cache_dir')
+    else:
+        cache_dir = False
+
     # Set Variables
     oFile = open(path_to_cuda_script, "r")
     sFile = oFile.read()
@@ -26,7 +32,7 @@ def cuda_set_vars_and_get_funcs(path_to_cuda_script=None, **kwargs):
     oFile.close()
 
     # Get Exectuable
-    sCommand = "mod = SourceModule(str(\"\"\"{}\"\"\"))\n\n".format(sFile)
+    sCommand = f"mod = SourceModule(str(\"\"\"{sFile}\"\"\"), cache_dir={cache_dir})\n\n"
     GlobalFunctions = sCommand.split("GLOBAL FUNCTIONS")[1].split(r"/*!!!  IMPLEMENTATION ")[0]
     last_preprocessor_condition = True
     for line in GlobalFunctions.split("\n"):
