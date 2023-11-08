@@ -44,18 +44,58 @@ def matrix_from_coo(coo):
     return matrix
 
 
-def matrix_from_json_coo(file_name, dtype=Fraction):
-    """Loads matrix from json containing coo dictionary."""
-    data = json.load(open(file_name))
+def coo_from_json_coo(file_name, dtype=Fraction):
+    """Loads coo from json containing coo dictionary."""
+    with open(file_name, 'r') as f:
+        data = json.load(f)
     coo = {}
     for key in data.keys():
         coo[eval(key)] = dtype(data[key])
+    return coo
+
+
+def matrix_from_json_coo(file_name, dtype=Fraction):
+    """Loads matrix from json containing coo dictionary."""
+    coo = coo_from_json_coo(file_name, dtype=dtype)
     matrix = matrix_from_coo(coo)
     return matrix
 
 
+def json_coo_from_coo(coo, file_name):
+    coo = {str(key): str(val) for key, val in coo.items()}
+    with open(file_name, 'w') as f:
+        json.dump(coo, f)
+
+
 def json_coo_from_matrix(matrix, file_name):
     coo = coo_from_matrix(matrix)
-    coo = {str(key): str(val) for key, val in coo.items()}
-    with open(file_name, 'w') as fp:
-        json.dump(coo, fp)
+    json_coo_from_coo(coo, file_name)
+
+
+def plain_txt_coo_from_coo(coo, file_name):
+    with open(file_name, "w+") as f:
+        for key, val in coo.items():
+            f.write(f"{key[0]} {key[1]} {val}\n")
+
+
+def plain_txt_coo_from_matrix(matrix, file_name):
+    coo = coo_from_matrix(matrix)
+    plain_txt_coo_from_coo(coo, file_name)
+
+
+def coo_from_plain_txt_coo(file_name, dtype=Fraction):
+    """Loads coo from json containing coo dictionary."""
+    with open(file_name, 'r') as f:
+        lines = f.readlines()
+    coo = {}
+    for line in lines:
+        key0, key1, val = line.split(" ")
+        coo[(eval(key0), eval(key1))] = dtype(val)
+    return coo
+
+
+def matrix_from_plain_txt_coo(file_name, dtype=Fraction):
+    """Loads coo from json containing coo dictionary."""
+    coo = coo_from_plain_txt_coo(file_name, dtype=dtype)
+    matrix = matrix_from_coo(coo)
+    return matrix
