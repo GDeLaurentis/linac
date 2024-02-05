@@ -10,7 +10,7 @@ import functools
 
 from io import StringIO
 from fractions import Fraction
-from lips.fields.finite_field import rationalise as rationalise_FF
+from pyadic.finite_field import rationalise as rationalise_FF
 from linac.linear_system_solver import iterative_gaussian_solver, rationalise
 from linac.gmp_solver import mpc_matrix_to_gmp_matrix, single_iteration_gmp_solver, gmp_rationalise
 

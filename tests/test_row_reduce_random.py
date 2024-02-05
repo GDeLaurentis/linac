@@ -6,7 +6,7 @@ import functools
 import mpmath
 
 from linac.row_reduce import row_reduce
-from lips.fields.finite_field import ModP
+from pyadic.finite_field import ModP
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
