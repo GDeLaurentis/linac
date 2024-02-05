@@ -33,6 +33,7 @@ def test_json_coo():
     matrix_reloaded = matrix_from_json_coo("/tmp/test_coo.json")
     assert numpy.all(matrix == matrix_reloaded)
 
+
 def test_plain_txt_coo():
     matrix = matrix_from_json_coo(local_directory + "/test_data/test_coo.json")
     plain_txt_coo_from_matrix(matrix, "/tmp/test_coo")
