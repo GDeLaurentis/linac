@@ -15,6 +15,7 @@ from fractions import Fraction
 
 def sparsity(matrix):
     """String representing the % of zeros in matrix."""
+    matrix = numpy.atleast_2d(matrix)
     return "%.3f" % ((1 - numpy.count_nonzero(matrix) / operator.mul(*matrix.shape)) * 100) + "%"
 
 
