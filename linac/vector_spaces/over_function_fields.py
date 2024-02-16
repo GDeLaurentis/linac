@@ -3,6 +3,8 @@
 import functools
 import numpy
 
+from syngular import Field
+
 from ..pycuda_row_reduce import cuda_row_reduce
 from ..row_reduce import row_reduce
 from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row_reduced_echelon_form
@@ -13,9 +15,11 @@ from .tools import mapThreads   # !! WARNING: This requires a better solution !!
 class VectorSpaceOfFunctions(object):
     """Vector Spaces of Fraction Fields of Polynomial (Quotient) Rings"""  # actually, rationality of the function is not required
 
-    def __init__(self, functions_evaluator, input_generator, verbose=True, use_gpu=True):
+    def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1), verbose=True, use_gpu=True):
         """functions_evaluator should return a 1d numpy array"""
         self.uses_gpu = use_gpu
+        self.verbose = verbose
+        self.field = field
         self.all_functions_evaluator = functions_evaluator
         self.input_generator = input_generator
         self.__get_pivots__()
@@ -30,7 +34,8 @@ class VectorSpaceOfFunctions(object):
     def __add__(self, other):
         def combined_functions(*args, **kwargs):
             return numpy.block([self.basis_functions(*args, **kwargs), other.basis_functions(*args, **kwargs)])
-        return VectorSpaceOfFunctions(tensor_function(combined_functions), self.input_generator, verbose=self.verbose, use_gpu=self.uses_gpu)
+        return VectorSpaceOfFunctions(tensor_function(combined_functions), self.input_generator,
+                                      field=self.field, verbose=self.verbose, use_gpu=self.uses_gpu)
 
     def __repr__(self):
         return f"Vector space of rational functions of dimension {self.dim}."
@@ -40,9 +45,9 @@ class VectorSpaceOfFunctions(object):
         random_points = [self.input_generator(i) for i in range(iteration * iteration_step, iteration * iteration_step + iteration_step)]
         A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points))
         if self.uses_gpu:
-            rref = cuda_row_reduce(A, field_characteristic=2 ** 31 - 1)
+            rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
         else:
-            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=2 ** 31 - 1, )
+            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, )
         while not numpy.all(rref[-1, :] == 0):
             iteration += 1
             if iteration > max_iteration:
@@ -51,9 +56,9 @@ class VectorSpaceOfFunctions(object):
             _A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points))
             A = numpy.block([[A], [_A]])
             if self.uses_gpu:
-                rref = cuda_row_reduce(A, field_characteristic=2 ** 31 - 1)
+                rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
             else:
-                rref, _ = row_reduce(A, scaling=False, threshold=0, prime=2 ** 31 - 1, )
+                rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, )
         rref = drop_bottom_zero_rows(rref)
         self.pivots = pivot_columns_from_row_reduced_echelon_form(rref)
 
@@ -71,9 +76,9 @@ class VectorSpaceOfFunctions(object):
             A1 = self._numerical_matrix_repr(other_as_tensor, tuple(random_points))
         A = numpy.block([A0, A1])
         if self.uses_gpu:
-            rref = cuda_row_reduce(A, field_characteristic=2 ** 31 - 1)
+            rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
         else:
-            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=2 ** 31 - 1, )
+            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, )
         rref = drop_bottom_zero_rows(rref)
         pivots = pivot_columns_from_row_reduced_echelon_form(rref)
         assert all([index in pivots for index in range(self.dim)])
@@ -93,4 +98,5 @@ class VectorSpaceOfFunctions(object):
             for symmetry in symmetries:
                 result_closed_under_symmetries += self.basis_functions(args[0].image(symmetry), *args[1:], **kwargs).tolist()
             return numpy.array(result_closed_under_symmetries)
-        return VectorSpaceOfFunctions(tensor_function(self_closed_under_symmetries), self.input_generator, verbose=self.verbose, use_gpu=self.uses_gpu)
+        return VectorSpaceOfFunctions(tensor_function(self_closed_under_symmetries), self.input_generator,
+                                      field=self.field, verbose=self.verbose, use_gpu=self.uses_gpu)
