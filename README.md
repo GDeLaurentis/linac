@@ -1,7 +1,7 @@
 # Linear Algebra with CUDA
 
 [![Continuous Integration Status](https://github.com/GDeLaurentis/linac-dev/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions)
-[![Coverage](https://img.shields.io/badge/Coverage-80%25-greenyellow?labelColor=2a2f35)](https://github.com/GDeLaurentis/linac-dev/actions)
+[![Coverage](https://img.shields.io/badge/Coverage-71%25-yellow?labelColor=2a2f35)](https://github.com/GDeLaurentis/linac-dev/actions)
 
 ## Requirements
 ```
