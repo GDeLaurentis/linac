@@ -15,11 +15,13 @@ from .tools import mapThreads   # !! WARNING: This requires a better solution !!
 class VectorSpaceOfFunctions(object):
     """Vector Spaces of Fraction Fields of Polynomial (Quotient) Rings"""  # actually, rationality of the function is not required
 
-    def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1), verbose=True, use_gpu=True):
+    def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1),
+                 verbose=True, use_gpu=True, iteration_step=20, max_iteration=50):
         """functions_evaluator should return a 1d numpy array"""
         self.uses_gpu = use_gpu
         self.verbose = verbose
         self.field = field
+        self.iteration_step, self.max_iteration = iteration_step, max_iteration
         self.all_functions_evaluator = functions_evaluator
         self.input_generator = input_generator
         self.__get_pivots__()
@@ -40,8 +42,8 @@ class VectorSpaceOfFunctions(object):
     def __repr__(self):
         return f"Vector space of rational functions of dimension {self.dim}."
 
-    def __get_pivots__(self, iteration_step=20, max_iteration=50):
-        iteration = 0
+    def __get_pivots__(self, ):
+        iteration, iteration_step, max_iteration = 0, self.iteration_step, self.max_iteration
         random_points = [self.input_generator(i) for i in range(iteration * iteration_step, iteration * iteration_step + iteration_step)]
         A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points))
         if self.uses_gpu:
