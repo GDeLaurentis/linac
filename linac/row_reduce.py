@@ -7,7 +7,7 @@
 import numpy
 import fractions
 
-from pyadic.finite_field import extended_euclideal_algorithm
+from pyadic.finite_field import extended_euclidean_algorithm
 
 from .timeit_decorator import timeit
 
@@ -37,7 +37,7 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
         matrix = matrix / row_scales
     if prime is not None:
         if matrix.dtype is numpy.dtype(object):  # if dtype is object make sure all fractions are converted to the correct finite field value
-            matrix = numpy.vectorize(lambda x: (x.numerator * extended_euclideal_algorithm(x.denominator, prime)[0]) % prime if isinstance(x, fractions.Fraction) else x)(matrix)
+            matrix = numpy.vectorize(lambda x: (x.numerator * extended_euclidean_algorithm(x.denominator, prime)[0]) % prime if isinstance(x, fractions.Fraction) else x)(matrix)
         matrix = matrix.astype('int64')
 
     while i < matrix.shape[0] and j < matrix.shape[1]:
@@ -62,7 +62,7 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
 
         if abs(matrix[i][j]) > threshold:
             if prime is not None:
-                s, t, gcd = extended_euclideal_algorithm(matrix[i][j], prime)
+                s, t, gcd = extended_euclidean_algorithm(matrix[i][j], prime)
                 if gcd != 1:
                     raise ZeroDivisionError("Inverse of {} mod {} does not exist. Are you sure {} is prime?".format(matrix[i][j], prime, prime))
                 matrix[i, :] = matrix[i, :] * s % prime
