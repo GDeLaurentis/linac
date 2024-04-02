@@ -16,9 +16,10 @@ class VectorSpaceOfFunctions(object):
     """Vector Spaces of Fraction Fields of Polynomial (Quotient) Rings"""  # actually, rationality of the function is not required
 
     def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1),
-                 verbose=True, use_gpu=True, iteration_step=20, max_iteration=50):
+                 verbose=True, use_gpu=True, iteration_step=20, max_iteration=50, Cores=8):
         """functions_evaluator should return a 1d numpy array"""
         self.uses_gpu = use_gpu
+        self.Cores = Cores
         self.verbose = verbose
         self.field = field
         self.iteration_step, self.max_iteration = iteration_step, max_iteration
@@ -45,7 +46,7 @@ class VectorSpaceOfFunctions(object):
     def __get_pivots__(self, ):
         iteration, iteration_step, max_iteration = 0, self.iteration_step, self.max_iteration
         random_points = [self.input_generator(i) for i in range(iteration * iteration_step, iteration * iteration_step + iteration_step)]
-        A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points))
+        A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points), Cores=self.Cores)
         if self.uses_gpu:
             rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
         else:
@@ -55,7 +56,7 @@ class VectorSpaceOfFunctions(object):
             if iteration > max_iteration:
                 raise Exception(f"Vector space exceeded dimension {iteration_step * max_iteration}")
             random_points = [self.input_generator(i) for i in range(iteration * iteration_step, iteration * iteration_step + iteration_step)]
-            _A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points))
+            _A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points), Cores=self.Cores)
             A = numpy.block([[A], [_A]])
             if self.uses_gpu:
                 rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
@@ -69,13 +70,13 @@ class VectorSpaceOfFunctions(object):
         if isinstance(other, VectorSpaceOfFunctions) and other.dim > self.dim:
             return False
         random_points = [self.input_generator(i) for i in range(self.dim + 1)]
-        A0 = self._numerical_matrix_repr(self.basis_functions, tuple(random_points))
+        A0 = self._numerical_matrix_repr(self.basis_functions, tuple(random_points), Cores=self.Cores)
         if isinstance(other, VectorSpaceOfFunctions):
-            A1 = self._numerical_matrix_repr(other.basis_functions, tuple(random_points))
+            A1 = self._numerical_matrix_repr(other.basis_functions, tuple(random_points), Cores=self.Cores)
         else:
             def other_as_tensor(*args, **kwargs):
                 return numpy.array([other(*args, **kwargs)])
-            A1 = self._numerical_matrix_repr(other_as_tensor, tuple(random_points))
+            A1 = self._numerical_matrix_repr(other_as_tensor, tuple(random_points), Cores=self.Cores)
         A = numpy.block([A0, A1])
         if self.uses_gpu:
             rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
@@ -88,8 +89,8 @@ class VectorSpaceOfFunctions(object):
 
     @staticmethod
     @functools.lru_cache()
-    def _numerical_matrix_repr(functions, random_points):
-        matrix = mapThreads(functions, random_points, Cores=5, UseParallelisation=True, verbose=False)
+    def _numerical_matrix_repr(functions, random_points, Cores=8):
+        matrix = mapThreads(functions, random_points, Cores=Cores, UseParallelisation=True, verbose=False)
         matrix = numpy.array(matrix).astype('uint32')
         return matrix
 
