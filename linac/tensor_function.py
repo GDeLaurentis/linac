@@ -41,8 +41,8 @@ class tensor_function(object):
         return tensor_function(lambda args: self(args) @ other)
 
     @memoized(name='tensor_function.__call__', ignore={0})
-    def __call__(self, args):
-        res = self.callable_function(args)
+    def __call__(self, *args, **kwargs):
+        res = self.callable_function(*args, **kwargs)
         if hasattr(res, "shape") and not hasattr(self, "__shape__"):
             self.shape = res.shape
         elif isinstance(res, list):
