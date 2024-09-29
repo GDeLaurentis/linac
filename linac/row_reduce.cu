@@ -1,6 +1,7 @@
 #define FIELD_CHARACTERISTIC {FIELD_CHARACTERISTIC}
 #define NBR_ROWS {NBR_ROWS}
 #define NBR_COLUMNS {NBR_COLUMNS}
+#define MERSENNE_PRIME 2147483647
 
 #include <pycuda-complex.hpp>
 #include <stdio.h>
@@ -107,7 +108,13 @@ __device__ int Inverse (int a) {
 }
 
 __device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
+#if FIELD_CHARACTERISTIC == MERSENNE_PRIME
+    unsigned long int product = a * b;
+    unsigned long int result = (product & MERSENNE_PRIME) + (product >> 31);
+    return static_cast<unsigned int>((result >= MERSENNE_PRIME) ? (result - MERSENNE_PRIME) : result);
+#else
     return static_cast<unsigned int>((a * b) % prime);
+#endif
 }
 
 __device__ unsigned int ModP (int a) {
@@ -167,7 +174,7 @@ __device__ void RowReduce(matrix_type *Matrix) {
         unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
         if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
             #if FIELD_CHARACTERISTIC > 0
-            Matrix[id] = ModP(Matrix[id] - Product64(Matrix[id_i], matrix_id_j_head));
+            Matrix[id] = ModP(static_cast<int>(Matrix[id]) - Product64(Matrix[id_i], matrix_id_j_head));
             #else
             Matrix[id] = Matrix[id] - Matrix[id_i] * Matrix[id_j_head];
             #endif
