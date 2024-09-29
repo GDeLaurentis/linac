@@ -112,9 +112,9 @@ __device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
 
 __device__ unsigned int ModP (int a) {
     if (a < 0) {
-	return a + prime;
+        return a + prime;
     } else {
-	return a;
+        return a;
     }
 }
 #endif
@@ -134,24 +134,50 @@ __device__ void RescaleRow(matrix_type *Matrix) {
 }
 
 __device__ void RowReduce(matrix_type *Matrix) {
-    int FoldingLength = blockDim.x;
-    int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
-    unsigned long int id_j_head = blockIdx.x * NbrColumns + j;
-    unsigned long int idMax = (blockIdx.x + 1) * NbrColumns;
-    for (int s = 0; s < NbrFoldings; s++) {
-	unsigned long int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
-	unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
-	if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
-	    #if FIELD_CHARACTERISTIC > 0
-	    Matrix[id] = ModP(Matrix[id] - Product64(Matrix[id_i], Matrix[id_j_head]));
-	    #else
-	    Matrix[id] = Matrix[id] - Matrix[id_i] * Matrix[id_j_head];
-	    #endif
-	}
+    __shared__ int FoldingLength;
+    __shared__ int NbrFoldings;
+    __shared__ unsigned long int id_j_head;
+    __shared__ unsigned long int idMax;
+#if FIELD_CHARACTERISTIC > 0
+    __shared__ bool matrix_id_j_head_is_zero;
+    __shared__ matrix_type matrix_id_j_head;
+#endif
+
+    if (threadIdx.x == 0) {
+        FoldingLength = blockDim.x;
+        NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
+        id_j_head = blockIdx.x * NbrColumns + j;
+        idMax = (blockIdx.x + 1) * NbrColumns;
+#if FIELD_CHARACTERISTIC > 0
+        matrix_id_j_head = Matrix[id_j_head];
+        matrix_id_j_head_is_zero = (matrix_id_j_head == 0);
+#endif
     }
+
     __syncthreads();
+
+#if FIELD_CHARACTERISTIC > 0
+    if (matrix_id_j_head_is_zero) {
+        return;
+    }
+#endif
+
+    for (int s = 0; s < NbrFoldings; s++) {
+        unsigned long int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
+        unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
+        if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
+            #if FIELD_CHARACTERISTIC > 0
+            Matrix[id] = ModP(Matrix[id] - Product64(Matrix[id_i], matrix_id_j_head));
+            #else
+            Matrix[id] = Matrix[id] - Matrix[id_i] * Matrix[id_j_head];
+            #endif
+        }
+    }
+
+    __syncthreads();
+
     if (blockIdx.x != i && threadIdx.x == 0 && id_j_head < MaxMatrixId) {
-	Matrix[id_j_head] = 0;
+        Matrix[id_j_head] = 0;
     }
 }
 
