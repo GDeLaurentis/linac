@@ -108,13 +108,7 @@ __device__ int Inverse (int a) {
 }
 
 __device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
-#if FIELD_CHARACTERISTIC == MERSENNE_PRIME
-    unsigned long int product = a * b;
-    unsigned long int result = (product & MERSENNE_PRIME) + (product >> 31);
-    return static_cast<unsigned int>((result >= MERSENNE_PRIME) ? (result - MERSENNE_PRIME) : result);
-#else
-    return static_cast<unsigned int>((a * b) % prime);
-#endif
+    return static_cast<unsigned int>((a * b) % FIELD_CHARACTERISTIC);
 }
 
 __device__ unsigned int ModP (int a) {
