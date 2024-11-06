@@ -1,7 +1,6 @@
 #define FIELD_CHARACTERISTIC {FIELD_CHARACTERISTIC}
 #define NBR_ROWS {NBR_ROWS}
 #define NBR_COLUMNS {NBR_COLUMNS}
-#define MERSENNE_PRIME 2147483647
 
 #include <pycuda-complex.hpp>
 #include <stdio.h>

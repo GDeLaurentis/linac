@@ -54,12 +54,17 @@ def cuda_set_vars_and_get_funcs(path_to_cuda_script=None, **kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+# might want to clamp this a multiple of 48 and 32 (to align warps and fill SM's)
+# commented out code is an attempt at this
+
 
 def number_of_foldings(x, FoldingMaxLength=1024):
+    # return int(math.ceil(x / folded_number_of_columns(x, FoldingMaxLength)))
     return int(math.ceil(x / float(FoldingMaxLength)))
 
 
 def folded_number_of_columns(x, FoldingMaxLength=1024):
+    # return 512
     return int(math.ceil((x / float(number_of_foldings(x, FoldingMaxLength)))))
 
 
