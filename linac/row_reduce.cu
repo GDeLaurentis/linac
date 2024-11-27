@@ -145,7 +145,7 @@ __device__ void RowReduce(matrix_type *Matrix) {
 
     if (threadIdx.x == 0) {
         FoldingLength = blockDim.x;
-        NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
+        NbrFoldings = ceil((NbrColumns - j - 1) / (1.0 * FoldingLength));
         id_j_head = blockIdx.x * NbrColumns + j;
         idMax = (blockIdx.x + 1) * NbrColumns;
 #if FIELD_CHARACTERISTIC > 0
@@ -163,9 +163,9 @@ __device__ void RowReduce(matrix_type *Matrix) {
 #endif
 
     for (int s = 0; s < NbrFoldings; s++) {
-        unsigned long int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
-        unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
-        if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
+        unsigned long int id = blockIdx.x * NbrColumns + j + 1 + s * FoldingLength + threadIdx.x;
+        unsigned long int id_i = i * NbrColumns + j + 1 + s * FoldingLength + threadIdx.x;
+        if (blockIdx.x != i && id < MaxMatrixId && id < idMax){
             #if FIELD_CHARACTERISTIC > 0
             Matrix[id] = ModP(static_cast<int>(Matrix[id]) - Product64(Matrix[id_i], matrix_id_j_head));
             #else

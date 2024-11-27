@@ -5,7 +5,7 @@ import os
 import math
 import time
 
-from linac.pycuda_tools import cuda_set_vars_and_get_funcs, number_of_foldings, folded_number_of_columns
+from linac.pycuda_tools import cuda_set_vars_and_get_funcs, number_of_foldings, folded_number_of_columns, round_to_multiple_of
 from linac.timeit_decorator import timeit
 
 local_directory = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +65,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
         time_rescale[-1] += time.time()
 
         time_reduce += [-time.time()]
-        CudaConditionalRowReduce(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(NbrRows, 1))  # noqa
+        CudaConditionalRowReduce(matrix_gpu, block=(round_to_multiple_of(folded_number_of_columns(NbrColumns - i, 512), 32), 1, 1), grid=(NbrRows, 1))  # noqa
         time_reduce[-1] += time.time()
 
         time_increment += [-time.time()]
