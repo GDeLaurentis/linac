@@ -3,6 +3,8 @@
 import numpy
 import pytest
 
+from pathlib import Path
+
 from linac.pycuda_row_reduce import cuda_row_reduce
 
 try:
@@ -11,6 +13,8 @@ except ImportError:
     pycuda_found = False
 else:
     pycuda_found = True
+
+current_dir = Path(__file__).parent
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -41,3 +45,17 @@ def test_cuda_row_reduce(field_characteristic, matrix_size, verbose=True):
         assert numpy.all(numpy.isclose(row_reduced_random_matrix - numpy.identity(matrix_size), numpy.zeros((matrix_size, matrix_size))))
     else:
         assert numpy.all(row_reduced_random_matrix == numpy.identity(matrix_size, dtype=int))
+
+
+def test_random_cuda_row_reduce_known_res(verbose=True):
+    matrix_size = 4097
+    field_characteristic = 2 ** 31 - 19
+    shape = (matrix_size, matrix_size)
+
+    numpy.random.seed(0)
+    random_matrix = numpy.random.randint(field_characteristic, size=(matrix_size, matrix_size), dtype=numpy.uint32)[:-1, :]
+
+    rref = cuda_row_reduce(random_matrix, field_characteristic, verbose=False)
+
+    known_res = numpy.load(current_dir / 'test_data' / 'known_result_4096_4097_2to32m19.npy')
+    assert numpy.all(known_res == rref[:, -1])
