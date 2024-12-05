@@ -134,22 +134,17 @@ __device__ void RescaleRow(matrix_type *Matrix) {
 }
 
 __device__ void RowReduce(matrix_type *Matrix) {
-    __shared__ int FoldingLength;
-    __shared__ int NbrFoldings;
     __shared__ unsigned long int id_j_head;
     __shared__ unsigned long int idMax;
+    __shared__ matrix_type matrix_id_j_head;
 #if FIELD_CHARACTERISTIC > 0
     __shared__ bool matrix_id_j_head_is_zero;
-    __shared__ matrix_type matrix_id_j_head;
 #endif
 
     if (threadIdx.x == 0) {
-        FoldingLength = blockDim.x;
-        NbrFoldings = ceil((NbrColumns - j - 1) / (1.0 * FoldingLength));
         id_j_head = blockIdx.x * NbrColumns + j;
-        idMax = (blockIdx.x + 1) * NbrColumns;
-#if FIELD_CHARACTERISTIC > 0
         matrix_id_j_head = Matrix[id_j_head];
+#if FIELD_CHARACTERISTIC > 0
         matrix_id_j_head_is_zero = (matrix_id_j_head == 0);
 #endif
     }
@@ -162,16 +157,36 @@ __device__ void RowReduce(matrix_type *Matrix) {
     }
 #endif
 
-    for (int s = 0; s < NbrFoldings; s++) {
-        unsigned long int id = blockIdx.x * NbrColumns + j + 1 + s * FoldingLength + threadIdx.x;
-        unsigned long int id_i = i * NbrColumns + j + 1 + s * FoldingLength + threadIdx.x;
-        if (blockIdx.x != i && id < MaxMatrixId && id < idMax){
-            #if FIELD_CHARACTERISTIC > 0
-            Matrix[id] = ModP(static_cast<int>(Matrix[id]) - Product64(Matrix[id_i], matrix_id_j_head));
-            #else
-            Matrix[id] = Matrix[id] - Matrix[id_i] * Matrix[id_j_head];
-            #endif
-        }
+    unsigned long int chunksize = 1;
+    if (FIELD_CHARACTERISTIC > 0) {
+    	chunksize = 4;
+    }
+    for (int idx = threadIdx.x; idx < NbrColumns/chunksize; idx += blockDim.x) {
+	unsigned long int id = blockIdx.x * NbrColumns/chunksize + idx;
+	unsigned long int id_i = i * NbrColumns/chunksize + idx;
+	if (blockIdx.x != i){
+	    #if FIELD_CHARACTERISTIC > 0
+	    uint4 result = reinterpret_cast<uint4*>(Matrix)[id];
+	    uint4 ref = reinterpret_cast<uint4*>(Matrix)[id_i];
+	    if(idx * chunksize > j){
+	        result.x = ModP(result.x - Product64(ref.x, matrix_id_j_head));
+	    }
+	    if(idx * chunksize + 1 > j){
+	        result.y = ModP(result.y - Product64(ref.y, matrix_id_j_head));
+	    }
+	    if(idx * chunksize + 2 > j){
+	        result.z = ModP(result.z - Product64(ref.z, matrix_id_j_head));
+	    }
+	    if(idx * chunksize + 3 > j){
+	        result.w = ModP(result.w - Product64(ref.w, matrix_id_j_head));
+	    }
+	    reinterpret_cast<uint4*>(Matrix)[id] = result;
+	    #else
+	    if(idx > j){
+		Matrix[id] = Matrix[id] - Matrix[id_i] * matrix_id_j_head;
+	    }
+	    #endif
+	}
     }
 
     __syncthreads();

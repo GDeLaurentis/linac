@@ -34,6 +34,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
     # Need alignment in order to access uint32 as 4 vector
     access_size = 16
+    chunksize = access_size // matrix_cpu.dtype.itemsize
     if width%access_size == 0:
         pad = 0
     else:
@@ -86,7 +87,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
         time_rescale[-1] += time.time()
 
         time_reduce += [-time.time()]
-        CudaConditionalRowReduce(matrix_gpu, block=(round_to_multiple_of(folded_number_of_columns(NbrColumns - i, 512), 32), 1, 1), grid=(NbrRows, 1))  # noqa
+        CudaConditionalRowReduce(matrix_gpu, block=(round_to_multiple_of(folded_number_of_columns(EffNbrColumns - i, 512), 32), 1, 1), grid=(NbrRows, 1))  # noqa
         time_reduce[-1] += time.time()
 
         time_increment += [-time.time()]
@@ -117,6 +118,9 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     matrix_copier.dst_pitch = width
     matrix_copier.height = height
     matrix_copier(aligned=True)
+
+    print("NThreads = {}".format(folded_number_of_columns(EffNbrColumns//chunksize)))
+    print(matrix_cpu[-1,:])
 
     return matrix_cpu
 
