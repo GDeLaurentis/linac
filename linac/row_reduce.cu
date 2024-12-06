@@ -135,24 +135,17 @@ __device__ void RescaleRow(matrix_type *Matrix) {
 
 __device__ void RowReduce(matrix_type *Matrix) {
     __shared__ unsigned long int id_j_head;
-//    __shared__ unsigned long int idMax;
     __shared__ matrix_type matrix_id_j_head;
-#if FIELD_CHARACTERISTIC > 0
-    __shared__ bool matrix_id_j_head_is_zero;
-#endif
 
     if (threadIdx.x == 0) {
         id_j_head = blockIdx.x * NbrColumns + j;
         matrix_id_j_head = Matrix[id_j_head];
-#if FIELD_CHARACTERISTIC > 0
-        matrix_id_j_head_is_zero = (matrix_id_j_head == 0);
-#endif
     }
 
     __syncthreads();
 
 #if FIELD_CHARACTERISTIC > 0
-    if (matrix_id_j_head_is_zero) {
+    if (matrix_id_j_head == 0) {
         return;
     }
 #endif
