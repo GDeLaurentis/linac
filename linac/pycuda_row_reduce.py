@@ -119,8 +119,8 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     matrix_copier.height = height
     matrix_copier(aligned=True)
 
-    print("NThreads = {}".format(folded_number_of_columns(EffNbrColumns//chunksize)))
-    print(matrix_cpu[-1,:])
+    # print("NThreads = {}".format(folded_number_of_columns(EffNbrColumns//chunksize)))
+    # print(matrix_cpu[-1,:])
 
     return matrix_cpu
 
