@@ -137,6 +137,12 @@ __device__ void RowReduce(matrix_type *Matrix) {
     __shared__ unsigned long int id_j_head;
     __shared__ matrix_type matrix_id_j_head;
 
+#if FIELD_CHARACTERISTIC > 0
+    unsigned long int chunksize = 4;
+#else
+    unsigned long int chunksize = 1;
+#endif
+
     if (threadIdx.x == 0) {
         id_j_head = blockIdx.x * NbrColumns + j;
         matrix_id_j_head = Matrix[id_j_head];
@@ -150,11 +156,8 @@ __device__ void RowReduce(matrix_type *Matrix) {
     }
 #endif
 
-    unsigned long int chunksize = 1;
-    if (FIELD_CHARACTERISTIC > 0) {
-    	chunksize = 4;
-    }
-    for (int idx = threadIdx.x; idx < NbrColumns/chunksize; idx += blockDim.x) {
+    int idx_min = j/chunksize + threadIdx.x; 
+    for (int idx = idx_min; idx < NbrColumns/chunksize; idx += blockDim.x) {
 	unsigned long int id = blockIdx.x * NbrColumns/chunksize + idx;
 	unsigned long int id_i = i * NbrColumns/chunksize + idx;
 	if (blockIdx.x != i){
