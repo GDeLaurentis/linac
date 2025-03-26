@@ -1,4 +1,5 @@
 import functools
+import operator
 import numpy
 
 
@@ -31,7 +32,10 @@ class tensor_function(object):
             self.__name__ = callable_function.__name__
 
     def flatten(self):
-        return tensor_function(lambda args: self(args).flatten())
+        selfFlattened = tensor_function(lambda args: self(args).flatten())
+        if hasattr(self, '__shape__'):
+            selfFlattened.shape = (functools.reduce(operator.mul, self.__shape__), )
+        return selfFlattened
 
     def __getitem__(self, index):
         return tensor_function(lambda args: self(args)[index])
@@ -69,5 +73,6 @@ class tensor_function(object):
         self.__shape__ = value
 
     def __iter__(self):
-        for entry in self.flatten():
-            yield entry
+        selfFlattened = self.flatten()
+        for i in range(selfFlattened.shape[0]):
+            yield self[i]
