@@ -44,7 +44,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     # Reduction To Reduced Echelon Form
     for i in range(max(NbrRows, NbrColumns)):
 
-        if verbose:
+        if verbose:  # perhaps limit printing rate
             print(f"\r@{i}/{max(NbrRows, NbrColumns)}               ", end="")
 
         time_on_gpu += [-time.time()]
