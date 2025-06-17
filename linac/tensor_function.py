@@ -22,6 +22,19 @@ def memoized(*decorator_args, **decorator_kwargs):
     return memoized_decorator
 
 
+def update_shape(func):
+    """Decorator to update shape/size metadata after function call."""
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        res = func(self, *args, **kwargs)
+        if hasattr(res, "shape") and not hasattr(self, "__shape__"):
+            self.shape = res.shape
+        elif isinstance(res, list) and not hasattr(self, "__size__"):
+            self.__size__ = len(res)
+        return res
+    return wrapper
+
+
 class tensor_function(object):
     """Tensor function supporting indexing and iteration.
        For instance, the initializer 'callable_function' can be a function returning a numpy.array"""
@@ -32,25 +45,22 @@ class tensor_function(object):
             self.__name__ = callable_function.__name__
 
     def flatten(self):
-        selfFlattened = tensor_function(lambda args: self(args).flatten())
+        selfFlattened = self.__class__(lambda args: self(args).flatten())
         if hasattr(self, '__shape__'):
             selfFlattened.shape = (functools.reduce(operator.mul, self.__shape__), )
         return selfFlattened
 
     def __getitem__(self, index):
-        return tensor_function(lambda args: self(args)[index])
+        return self.__class__(lambda args: self(args)[index])
 
     def __matmul__(self, other):
         assert isinstance(other, numpy.ndarray)
-        return tensor_function(lambda args: self(args) @ other)
+        return self.__class__(lambda args: self(args) @ other)
 
+    @update_shape
     @memoized(name='tensor_function.__call__', ignore={0})
     def __call__(self, *args, **kwargs):
         res = self.callable_function(*args, **kwargs)
-        if hasattr(res, "shape") and not hasattr(self, "__shape__"):
-            self.shape = res.shape
-        elif isinstance(res, list):
-            self.__size__ = len(res)
         return res
 
     def __len__(self):

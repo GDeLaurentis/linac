@@ -7,7 +7,8 @@ from syngular import Field
 
 from ..pycuda_row_reduce import cuda_row_reduce
 from ..row_reduce import row_reduce
-from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row_reduced_echelon_form
+from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row_reduced_echelon_form, \
+    canonical_kernel_from_row_reduced_echelon_form
 from ..tensor_function import tensor_function
 from .tools import mapThreads   # !! WARNING: This requires a better solution !!
 
@@ -62,8 +63,12 @@ class VectorSpaceOfFunctions(object):
                 rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
             else:
                 rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, )
-        rref = drop_bottom_zero_rows(rref)
-        self.pivots = pivot_columns_from_row_reduced_echelon_form(rref)
+        self.rref = drop_bottom_zero_rows(rref)
+        self.pivots = pivot_columns_from_row_reduced_echelon_form(self.rref)
+
+    @property
+    def kernel(self):
+        return canonical_kernel_from_row_reduced_echelon_form(self.rref)
 
     def __contains__(self, other):
         """Is other in self? other should be a function or a vector space of rational functions."""
