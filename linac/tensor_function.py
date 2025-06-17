@@ -45,17 +45,17 @@ class tensor_function(object):
             self.__name__ = callable_function.__name__
 
     def flatten(self):
-        selfFlattened = self.__class__(lambda args: self(args).flatten())
+        selfFlattened = self.__class__(lambda *args, **kwargs: self(*args, **kwargs).flatten())
         if hasattr(self, '__shape__'):
             selfFlattened.shape = (functools.reduce(operator.mul, self.__shape__), )
         return selfFlattened
 
     def __getitem__(self, index):
-        return self.__class__(lambda args: self(args)[index])
+        return self.__class__(lambda *args, **kwargs: self(*args, **kwargs)[index])
 
     def __matmul__(self, other):
         assert isinstance(other, numpy.ndarray)
-        return self.__class__(lambda args: self(args) @ other)
+        return self.__class__(lambda *args, **kwargs: self(*args, **kwargs) @ other)
 
     @update_shape
     @memoized(name='tensor_function.__call__', ignore={0})
@@ -85,4 +85,4 @@ class tensor_function(object):
     def __iter__(self):
         selfFlattened = self.flatten()
         for i in range(selfFlattened.shape[0]):
-            yield self[i]
+            yield selfFlattened[i]
