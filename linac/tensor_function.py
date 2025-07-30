@@ -51,7 +51,15 @@ class tensor_function(object):
         return selfFlattened
 
     def __getitem__(self, index):
-        return self.__class__(lambda *args, **kwargs: self(*args, **kwargs)[index])
+        new = self.__class__(lambda *args, **kwargs: self(*args, **kwargs)[index])
+        try:  # try to update shape
+            dummy = numpy.empty(self.__shape__)
+            result_shape = numpy.shape(dummy[index])
+            new.shape = result_shape
+        except Exception:
+            # print(f"Shape inference failed for index {index} and shape {self.__shape__}: {e}")
+            pass
+        return new
 
     def __matmul__(self, other):
         assert isinstance(other, numpy.ndarray)

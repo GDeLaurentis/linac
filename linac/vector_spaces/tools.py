@@ -4,10 +4,9 @@
 # Author: Giuseppe
 
 # !!! WARNING THIS IS FROM antares-dev DO NOT MODIFY HERE !!!
+# !!!          USE MELD TO MODIFY IF NEEDED               !!!
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
+import os
 import sys
 import math
 import time
@@ -19,10 +18,32 @@ import multiprocessing.pool
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
+class fakeValue(object):
+
+    def __init__(self, type_, init_value):
+        if type_ == 'f':
+            self.value = float(init_value)
+        elif type_ == 'i':
+            self.value = int(init_value)
+
+
+class fakeManager(object):
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def Value(type_, init_value):
+        return fakeValue(type_, init_value)
+
+
 class Progress(object):
 
-    def __init__(self, maximum):
-        self.manager = multiprocessing.Manager()
+    def __init__(self, maximum, UseParallelisation):
+        if UseParallelisation is True:
+            self.manager = multiprocessing.Manager()
+        else:
+            self.manager = fakeManager()
         self.time = self.manager.Value('f', 0)
         self.average_time = self.manager.Value('f', 0)
         self.current = self.manager.Value('i', -1)
@@ -103,7 +124,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
         return proc
 
 
-class MyPool(object):      # context manager pool
+class MyProcessPool(object):      # context manager pool (spawns new processes, sidesteps the GIL)
 
     def __init__(self, processes=1, initializer=None, initargs=None):
         self.processes = processes
@@ -112,6 +133,25 @@ class MyPool(object):      # context manager pool
 
     def __enter__(self):
         self.obj = NoDaemonProcessPool(self.processes, self.initializer, self.initargs)
+        # self.obj = multiprocessing.Pool(self.processes, self.initializer, self.initargs)
+        return self.obj
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.obj.close()
+        self.obj.join()
+        self.obj.terminate()
+
+
+class MyThreadPool(object):      # context manager pool (no new processes, currently affected by GIL)
+
+    def __init__(self, processes=1, initializer=None, initargs=None):
+        self.processes = processes
+        self.initializer = initializer
+        self.initargs = initargs
+
+    def __enter__(self):
+        # self.obj = NoDaemonThreadPool(self.processes, self.initializer, self.initargs)
+        self.obj = multiprocessing.pool.ThreadPool(self.processes, self.initializer, self.initargs)
         return self.obj
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -124,7 +164,6 @@ class MyPool(object):      # context manager pool
 
 
 def progress_wrapper(func, *args, **kwargs):
-    global lock, prog
     with lock if lock is not None else nullcontext():
         prog.increment()
         if type(args[-1]) in [list, tuple] and isinstance(args[-1][0], str) and len(", ".join(args[-1])) < 40:
@@ -147,15 +186,22 @@ def worker(x):
     return _lambda_compatible_func(x)
 
 
-def mapThreads(func, *args, **kwargs):
-    UseParallelisation, Cores, verbose = kwargs.pop("UseParallelisation", True), kwargs.pop("Cores", 6), kwargs.pop("verbose", True)
-    _func_partial = functools.partial(func, *args[:-1], **kwargs)
+def _init(l, p, func, ):
+    global lock, prog, _lambda_compatible_func
+    lock = l
+    prog = p
+    _lambda_compatible_func = func
 
-    def _init(l, p, func,):
-        global lock, prog, _lambda_compatible_func
-        lock = l
-        prog = p
-        _lambda_compatible_func = func
+
+def mapThreads(func, *args, **kwargs):
+    # Default keyword arguments
+    UseParallelisation = kwargs.pop("UseParallelisation", True)
+    ParallelisationType = kwargs.pop("ParallelisationType", ('Thread', 'Process')[1])
+    Cores = kwargs.pop("Cores", os.cpu_count() // 2)
+    verbose = kwargs.pop("verbose", True)
+
+    # map is applied to the last argument
+    _func_partial = functools.partial(func, *args[:-1], **kwargs)
 
     if verbose:
         func_partial = functools.partial(progress_wrapper, _func_partial)
@@ -164,13 +210,19 @@ def mapThreads(func, *args, **kwargs):
 
     if UseParallelisation is True:
         l = multiprocessing.Lock()
-        p = Progress(len(args[-1]))
-        with MyPool(Cores, initializer=_init, initargs=(l, p, func_partial,)) as pool:
-            results = pool.map(worker, args[-1])
+        p = Progress(len(args[-1]), UseParallelisation)
+        if ParallelisationType == 'Process' or ParallelisationType == 'Processing':
+            with MyProcessPool(Cores, initializer=_init, initargs=(l, p, func_partial,)) as pool:
+                results = pool.map(worker, args[-1])
+        elif ParallelisationType == 'Thread' or ParallelisationType == 'Threading':
+            with MyThreadPool(Cores, initializer=_init, initargs=(l, p, func_partial,)) as pool:
+                results = pool.map(worker, args[-1])
+        else:
+            raise ValueError("ParallelisationType must be either Process(ing) or Thread(ing).")
     else:
         global prog, lock
         lock = None
-        prog = Progress(len(args[-1]))
+        prog = Progress(len(args[-1]), UseParallelisation)
         results = list(map(func_partial, args[-1]))
 
     if verbose:

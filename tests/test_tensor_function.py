@@ -10,6 +10,16 @@ def fs(x, y):
     )
 
 
+def gs(x, y):
+    return [x, y, x + y, x + 3 * y]
+
+
+def test_tf_plain_list():
+    oFs = tensor_function(gs)
+    oFs(1, 2)
+    assert len(oFs) == 4
+
+
 def test_tf_evaluation():
     oFs = tensor_function(fs)
     assert numpy.all(oFs(1, 2) == fs(1, 2))
