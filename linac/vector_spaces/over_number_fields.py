@@ -60,7 +60,7 @@ class ColumnVectorSpace(object):
 
     def __eq__(self, other):
         # return self in other and other in self   # this doesn't assume canonical kernel form
-        return hash(self) == hash(other)
+        return hash(self) == hash(other)           # might want to revisit this, it is not the intuitive equality
 
     def __hash__(self):
         return hash(tuple(self.matrix.flatten()))  # this assumes canonical kernel form
