@@ -55,7 +55,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
     exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
                                          NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, FIELD_CHARACTERISTIC=field_characteristic, )),
-                                         locals(), globals())
+         locals(), globals())
 
     if field_characteristic == 0:  # Set The Row Scales Array On The Gpu
         CudaSetRowScales(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns, FoldingMaxLength=2048) / 2.0)), 1, 1), grid=(NbrRows, 1))  # noqa
