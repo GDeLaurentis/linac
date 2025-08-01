@@ -59,25 +59,25 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
     __syncthreads();
 
     for (int s = 0; s < ceil(double(BASIS_LENGTH)/blockDim.x); s++) {
-	int basis_index = s * blockDim.x + threadIdx.x;
-	if (basis_index < BASIS_LENGTH) {
-	    basis[basis_index] = bases[blockIdx.x * BASIS_LENGTH + basis_index];
-	}
+        int basis_index = s * blockDim.x + threadIdx.x;
+        if (basis_index < BASIS_LENGTH) {
+            basis[basis_index] = bases[blockIdx.x * BASIS_LENGTH + basis_index];
+        }
     }
-  
+
     __syncthreads();
 
     for (int s = 0; s < NbrFoldings; s++) {
-	int column_id = threadIdx.x + s * FoldingLength;
-	if (column_id < NbrColumns) {
-	    matrix[blockIdx.x * NbrColumns + column_id] = basis[indices[column_id * DEGREE]];
-	    for (int t = 1; t < DEGREE; t++) {
+        int column_id = threadIdx.x + s * FoldingLength;
+        if (column_id < NbrColumns) {
+            matrix[blockIdx.x * NbrColumns + column_id] = basis[indices[column_id * DEGREE]];
+            for (int t = 1; t < DEGREE; t++) {
 #if FIELD_CHARACTERISTIC > 0
-		matrix[blockIdx.x * NbrColumns + column_id] = Product64(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * DEGREE + t]]);
+            matrix[blockIdx.x * NbrColumns + column_id] = Product64(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * DEGREE + t]]);
 #else
-		matrix[blockIdx.x * NbrColumns + column_id] = matrix[blockIdx.x * NbrColumns + column_id] * basis[indices[column_id * DEGREE + t]];
+            matrix[blockIdx.x * NbrColumns + column_id] = matrix[blockIdx.x * NbrColumns + column_id] * basis[indices[column_id * DEGREE + t]];
 #endif
-	    }
-	}
+            }
+        }
     }
 }

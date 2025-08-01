@@ -79,16 +79,16 @@ __device__ int Inverse (int a) {
     int t = 1;
 
     while (r != 0) {
-    quotient = old_r / r;
-    old_old_r = old_r;
-    old_r = r;
-    r = old_old_r - quotient * old_r;
-    old_old_s = old_s;
-    old_s = s;
-    s = old_old_s - quotient * old_s;
-    old_old_t = old_t;
-    old_t = t;
-    t = old_old_t - quotient * old_t;
+        quotient = old_r / r;
+        old_old_r = old_r;
+        old_r = r;
+        r = old_old_r - quotient * old_r;
+        old_old_s = old_s;
+        old_s = s;
+        s = old_old_s - quotient * old_s;
+        old_old_t = old_t;
+        old_t = t;
+        t = old_old_t - quotient * old_t;
     }
 
     // output "Bézout coefficients:", (old_s, old_t)
@@ -100,9 +100,9 @@ __device__ int Inverse (int a) {
     // gcd = old_r;
 
     if (s > 0) {
-    return s;
+        return s;
     } else {
-    return s + prime;
+        return s + prime;
     }
 }
 
@@ -126,9 +126,9 @@ __device__ void RescaleRow(matrix_type *Matrix) {
     unsigned long int id = i * NbrColumns + FoldingLength * blockIdx.x + threadIdx.x;
     if (id < MaxId) {
 #if FIELD_CHARACTERISTIC > 0
-    Matrix[id] = Product64(Matrix[id], Inverse(Matrix[id_i_head]));
+        Matrix[id] = Product64(Matrix[id], Inverse(Matrix[id_i_head]));
 #else
-    Matrix[id] = Matrix[id] / Matrix[id_i_head];
+        Matrix[id] = Matrix[id] / Matrix[id_i_head];
 #endif
     }
 }
@@ -235,7 +235,7 @@ __global__ void SetRowScales(matrix_type *Matrix) {
         if (threadIdx.x < s) {
             int sdataId = 0 + s * threadIdx.x * blockDim.x;
             if (sdata[sdataId] < sdata[sdataId + blockDim.x]) {
-            sdata[sdataId] = sdata[sdataId + blockDim.x];
+                sdata[sdataId] = sdata[sdataId + blockDim.x];
             }
         }
     }
@@ -306,13 +306,13 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
         matrix_type value1 = Matrix[MatrixId1];
         matrix_type value2 = Matrix[MatrixId2];	
 #endif
-    if (value1 > value2){
-        idata[tid] = RowId1;
-        sdata[tid] = value1;
-    } else {
-        idata[tid] = RowId2;
-        sdata[tid] = value2;
-    }
+        if (value1 > value2){
+            idata[tid] = RowId1;
+            sdata[tid] = value1;
+        } else {
+            idata[tid] = RowId2;
+            sdata[tid] = value2;
+        }
     } else if (RowId1 < NbrRows) {
         idata[tid] = RowId1;
 #if FIELD_CHARACTERISTIC == 0
