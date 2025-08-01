@@ -13,6 +13,7 @@ setup(
         'numpy<2.0',
         'mpmath',
         'pyadic',
+        'diskcache',
     ],
     extras_require={
         'full': [
