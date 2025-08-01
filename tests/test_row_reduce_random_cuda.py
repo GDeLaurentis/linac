@@ -38,11 +38,11 @@ def test_cuda_row_reduce(field_characteristic, matrix_size, verbose=True):
         random_float_matrix1, random_float_matrix2 = numpy.random.rand(*shape), numpy.random.rand(*shape)
         random_matrix = random_float_matrix1 + 1j * random_float_matrix2
     else:
-        random_matrix = numpy.random.randint(field_characteristic, size=(matrix_size, matrix_size))
+        random_matrix = numpy.random.randint(field_characteristic, size=shape)
 
     row_reduced_random_matrix = cuda_row_reduce(random_matrix, field_characteristic, verbose)
     if field_characteristic == 0:
-        assert numpy.all(numpy.isclose(row_reduced_random_matrix - numpy.identity(matrix_size), numpy.zeros((matrix_size, matrix_size))))
+        assert numpy.all(numpy.isclose(row_reduced_random_matrix - numpy.identity(matrix_size), numpy.zeros(shape)))
     else:
         assert numpy.all(row_reduced_random_matrix == numpy.identity(matrix_size, dtype=int))
 
@@ -53,7 +53,7 @@ def test_random_cuda_row_reduce_known_res(verbose=True):
     shape = (matrix_size, matrix_size)
 
     numpy.random.seed(0)
-    random_matrix = numpy.random.randint(field_characteristic, size=(matrix_size, matrix_size), dtype=numpy.uint32)[:-1, :]
+    random_matrix = numpy.random.randint(field_characteristic, size=shape, dtype=numpy.uint32)[:-1, :]
 
     rref = cuda_row_reduce(random_matrix, field_characteristic, verbose=False)
 

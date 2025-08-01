@@ -34,13 +34,12 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
     # Need alignment in order to access uint32 as 4 vector
     access_size = 16
-    chunksize = access_size // matrix_cpu.dtype.itemsize
-    if width%access_size == 0:
+    if width % access_size == 0:
         pad = 0
     else:
-        pad = access_size - width%access_size
+        pad = access_size - width % access_size
     pitch = width + pad
-    matrix_gpu = cuda.mem_alloc(pitch*height)
+    matrix_gpu = cuda.mem_alloc(pitch * height)
 
     EffNbrColumns = pitch // matrix_cpu.dtype.itemsize
 
@@ -55,7 +54,8 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     matrix_copier(aligned=True)
 
     exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
-                                         NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, FIELD_CHARACTERISTIC=field_characteristic, )), locals(), globals())
+                                         NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, FIELD_CHARACTERISTIC=field_characteristic, )),
+                                         locals(), globals())
 
     if field_characteristic == 0:  # Set The Row Scales Array On The Gpu
         CudaSetRowScales(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns, FoldingMaxLength=2048) / 2.0)), 1, 1), grid=(NbrRows, 1))  # noqa
@@ -89,6 +89,9 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
         CudaConditionalRescaleRow(matrix_gpu, block=(folded_number_of_columns(NbrColumns), 1, 1), grid=(number_of_foldings(NbrColumns), 1))  # noqa
         time_rescale[-1] += time.time()
 
+        if i == NbrColumns:
+            break
+
         time_reduce += [-time.time()]
         CudaConditionalRowReduce(matrix_gpu, block=(round_to_multiple_of(folded_number_of_columns(EffNbrColumns - i, 512), 32), 1, 1), grid=(NbrRows, 1))  # noqa
         time_reduce[-1] += time.time()
@@ -100,9 +103,6 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
 
         time_on_gpu[-1] += time.time()
 
-        # if i % 100 == 0:
-        #        time.sleep(0.5)
-
     if verbose:
         print("\rTime elapsed on gpu: ", sum(time_on_gpu), ". ", end="\n")
         if field_characteristic == 0:
@@ -112,18 +112,14 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
         print("time_reduce", sum(time_reduce), end="\n")
         print("time_increment", sum(time_increment), end="\n")
 
-   # Pull Matrix From Device
+    # Pull Matrix From Device
     matrix_copier = cuda.Memcpy2D()
     matrix_copier.set_src_device(matrix_gpu)
     matrix_copier.set_dst_host(matrix_cpu)
     matrix_copier.width_in_bytes = width
-    matrix_copier.src_pitch = pitch 
+    matrix_copier.src_pitch = pitch
     matrix_copier.dst_pitch = width
     matrix_copier.height = height
     matrix_copier(aligned=True)
 
-    # print("NThreads = {}".format(folded_number_of_columns(EffNbrColumns//chunksize)))
-    # print(matrix_cpu[-1,:])
-
     return matrix_cpu
-
