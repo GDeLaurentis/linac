@@ -12,7 +12,6 @@ from io import StringIO
 from fractions import Fraction
 from pyadic.finite_field import rationalise as rationalise_FF
 from linac.linear_system_solver import iterative_gaussian_solver, rationalise
-from linac.gmp_solver import mpc_matrix_to_gmp_matrix, single_iteration_gmp_solver, gmp_rationalise
 
 try:
     import pycuda  # noqa
@@ -20,13 +19,6 @@ except ImportError:
     pycuda_found = False
 else:
     pycuda_found = True
-
-try:
-    import gmpTools  # noqa
-except ImportError:
-    gmpTools_found = False
-else:
-    gmpTools_found = True
 
 
 local_directory = os.path.dirname(os.path.abspath(__file__))
@@ -103,17 +95,14 @@ def test_iterative_linear_solver(cached_matrix_relative_path, field_characterist
         ('/test_data/small_linear_system_matrix_non_redundant.npy', 0, 6, solutions[0]),  # 6pt split MHV tree, N/([16]⟨23⟩⟨34⟩[56]⟨2|1+6|5]s234) in s234 limit
     ]
 )
-@pytest.mark.skipif(not gmpTools_found, reason="gmpTools not found")
-def test_gmp_linear_solver(cached_matrix_relative_path, known_nbr_dropped_redundant, known_nbr_dropped_zero, known_rational_solution):
+def test_mpc_linear_solver(cached_matrix_relative_path, known_nbr_dropped_redundant, known_nbr_dropped_zero, known_rational_solution):
     matrix = numpy.load(local_directory + cached_matrix_relative_path, allow_pickle=True)
-    nInput = matrix.shape[0]
-    gmp_matrix = mpc_matrix_to_gmp_matrix(matrix)
     with Capturing() as output:
-        solution = single_iteration_gmp_solver(gmp_matrix, nInput)
+        solution = iterative_gaussian_solver(matrix, use_gpu=False)
     print("\n".join(output))
     droped_redundants = list(map(int, re.findall(r"dropped_redundant: (\d+),", "".join(output))))
     assert droped_redundants[-1] == known_nbr_dropped_redundant
     dropped_zeros = list(map(int, re.findall(r"dropped_zero: (\d+),", "".join(output))))
     assert dropped_zeros[-1] == known_nbr_dropped_zero
-    rational_solution = list(map(gmp_rationalise, solution))
+    rational_solution = list(zip(*numpy.vectorize(rationalise)(solution)))
     assert rational_solution == known_rational_solution
