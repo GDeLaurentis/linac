@@ -8,6 +8,13 @@ with (this_directory / "linac" / "version.py").open() as f:
     version = f.read().split(" = '")[1].split("'\n")[0]
 
 
+extras = {
+    'cuda': ['pycuda'],
+    'dev': ['mpmath', 'diskcache', 'pytest', 'pytest-cov', 'flake8'],
+}
+extras['full'] = extras['cuda'] + extras['dev']
+
+
 setup(
     name='linac',
     version=version,
@@ -21,14 +28,9 @@ setup(
     include_package_data=True,
     install_requires=[
         'numpy<2.0',
-        'mpmath',
         'pyadic',
     ],
-    extras_require={
-        'full': [
-            'pycuda',
-        ]
-    },
+    extras_require=extras,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
