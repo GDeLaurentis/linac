@@ -1,3 +1,4 @@
+from .version import __version__  # noqa
 from .pycuda_row_reduce import cuda_row_reduce  # noqa
 from .pycuda_matrix_loader import cuda_load_matrix, load_matrices  # noqa
 from .row_reduce import row_reduce  # noqa
