@@ -38,31 +38,14 @@ jobs:
         token: ${{ secrets.GitHubActions_PAT }}
         path: lips-dev
 
-    - name: Make CUDA discoverable
+    - name: Check CUDA is discoverable
       run: |
-        PY_VER=${{ matrix.python-version }}
-        PY_MAJOR_MINOR=$(echo $PY_VER | cut -d. -f1,2)
-        echo "Using Python version: $PY_VER"
-
-        PY_INCLUDE_DIR=$(python -c "from sysconfig import get_paths; print(get_paths()['include'])")
-        echo "Python include dir: $PY_INCLUDE_DIR"
-
-        export CPATH="${PY_INCLUDE_DIR}:${CPATH}"
-
-        PY_LOC=$(python -c 'import sys, os; print(os.path.dirname(sys.executable))')
-        echo "Python binary location: $PY_LOC"
-
-        export CPATH="${PY_LOC}:${CPATH}"
-
         echo "CPATH=$CPATH"
         echo "PATH=$PATH"
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
         nvcc --version
         nvidia-smi
-
-        ls "${PY_INCLUDE_DIR}"
-        ls "${PY_LOC}"
 
     - name: Install dependencies
       run: |
