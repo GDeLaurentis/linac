@@ -48,7 +48,11 @@ jobs:
         echo "Python include dir: $PY_INCLUDE_DIR"
 
         export CPATH="${PY_INCLUDE_DIR}:${CPATH}"
-        export CPATH="/home/docker/actions-runner/_work/_tool/Python/${PY_VER}/x64:${CPATH}"
+
+        PY_LOC=$(python -c 'import sys, os; print(os.path.dirname(sys.executable))')
+        echo "Python binary location: $PY_LOC"
+
+        export CPATH="${PY_LOC}:${CPATH}"
 
         echo "CPATH=$CPATH"
         echo "PATH=$PATH"
@@ -58,7 +62,7 @@ jobs:
         nvidia-smi
 
         ls "${PY_INCLUDE_DIR}"
-        ls /home/docker/actions-runner/_work/_tool/Python/${PY_VER}/x64
+        ls "${PY_LOC}"
 
     - name: Install dependencies
       run: |
