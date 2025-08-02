@@ -40,7 +40,7 @@ jobs:
 
     - name: Make CUDA discoverable
       run: |
-        PY_VER={{ matrix.python-version }}
+        PY_VER=${{ matrix.python-version }}
         PY_MAJOR_MINOR=$(echo $PY_VER | cut -d. -f1,2)
         echo "Using Python version: $PY_VER"
 

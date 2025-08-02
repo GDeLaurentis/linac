@@ -29,7 +29,7 @@ setup(
         'full': [
             'pycuda',
         ]
-    }
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
