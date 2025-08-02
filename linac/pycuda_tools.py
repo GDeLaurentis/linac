@@ -63,4 +63,8 @@ def folded_number_of_columns(x, FoldingMaxLength=1024):
     return int(math.ceil((x / float(number_of_foldings(x, FoldingMaxLength)))))
 
 
+def round_to_multiple_of(x, n=32):
+    return math.ceil(x / n) * n
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

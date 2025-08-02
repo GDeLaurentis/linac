@@ -79,16 +79,16 @@ __device__ int Inverse (int a) {
     int t = 1;
 
     while (r != 0) {
-	quotient = old_r / r;
-	old_old_r = old_r;
-	old_r = r;
-	r = old_old_r - quotient * old_r;
-	old_old_s = old_s;
-	old_s = s;
-	s = old_old_s - quotient * old_s;
-	old_old_t = old_t;
-	old_t = t;
-	t = old_old_t - quotient * old_t;
+        quotient = old_r / r;
+        old_old_r = old_r;
+        old_r = r;
+        r = old_old_r - quotient * old_r;
+        old_old_s = old_s;
+        old_s = s;
+        s = old_old_s - quotient * old_s;
+        old_old_t = old_t;
+        old_t = t;
+        t = old_old_t - quotient * old_t;
     }
 
     // output "Bézout coefficients:", (old_s, old_t)
@@ -100,21 +100,21 @@ __device__ int Inverse (int a) {
     // gcd = old_r;
 
     if (s > 0) {
-	return s;
+        return s;
     } else {
-	return s + prime;
+        return s + prime;
     }
 }
 
 __device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
-    return static_cast<unsigned int>((a * b) % prime);
+    return static_cast<unsigned int>((a * b) % FIELD_CHARACTERISTIC);
 }
 
 __device__ unsigned int ModP (int a) {
     if (a < 0) {
-	return a + prime;
+        return a + prime;
     } else {
-	return a;
+        return a;
     }
 }
 #endif
@@ -126,32 +126,69 @@ __device__ void RescaleRow(matrix_type *Matrix) {
     unsigned long int id = i * NbrColumns + FoldingLength * blockIdx.x + threadIdx.x;
     if (id < MaxId) {
 #if FIELD_CHARACTERISTIC > 0
-	Matrix[id] = Product64(Matrix[id], Inverse(Matrix[id_i_head]));
+        Matrix[id] = Product64(Matrix[id], Inverse(Matrix[id_i_head]));
 #else
-	Matrix[id] = Matrix[id] / Matrix[id_i_head];
+        Matrix[id] = Matrix[id] / Matrix[id_i_head];
 #endif
     }
 }
 
 __device__ void RowReduce(matrix_type *Matrix) {
-    int FoldingLength = blockDim.x;
-    int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
-    unsigned long int id_j_head = blockIdx.x * NbrColumns + j;
-    unsigned long int idMax = (blockIdx.x + 1) * NbrColumns;
-    for (int s = 0; s < NbrFoldings; s++) {
-	unsigned long int id = blockIdx.x * NbrColumns + s * FoldingLength + threadIdx.x;
-	unsigned long int id_i = i * NbrColumns + s * FoldingLength + threadIdx.x;
-	if (blockIdx.x != i && s * FoldingLength + threadIdx.x > j && id < MaxMatrixId && id < idMax){
-	    #if FIELD_CHARACTERISTIC > 0
-	    Matrix[id] = ModP(Matrix[id] - Product64(Matrix[id_i], Matrix[id_j_head]));
-	    #else
-	    Matrix[id] = Matrix[id] - Matrix[id_i] * Matrix[id_j_head];
-	    #endif
-	}
+    __shared__ unsigned long int id_j_head;
+    __shared__ matrix_type matrix_id_j_head;
+
+#if FIELD_CHARACTERISTIC > 0
+    unsigned long int chunksize = 4;
+#else
+    unsigned long int chunksize = 1;
+#endif
+
+    if (threadIdx.x == 0) {
+        id_j_head = blockIdx.x * NbrColumns + j;
+        matrix_id_j_head = Matrix[id_j_head];
     }
+
     __syncthreads();
+
+#if FIELD_CHARACTERISTIC > 0
+    if (matrix_id_j_head == 0) {
+        return;
+    }
+#endif
+
+    int idx_min = j/chunksize + threadIdx.x; 
+    for (int idx = idx_min; idx < NbrColumns/chunksize; idx += blockDim.x) {
+        unsigned long int id = blockIdx.x * NbrColumns/chunksize + idx;
+        unsigned long int id_i = i * NbrColumns/chunksize + idx;
+        if (blockIdx.x != i){
+#if FIELD_CHARACTERISTIC > 0
+            uint4 result = reinterpret_cast<uint4*>(Matrix)[id];
+            uint4 ref = reinterpret_cast<uint4*>(Matrix)[id_i];
+            if(idx * chunksize > j){
+                result.x = ModP(result.x - Product64(ref.x, matrix_id_j_head));
+            }
+            if(idx * chunksize + 1 > j){
+                result.y = ModP(result.y - Product64(ref.y, matrix_id_j_head));
+            }
+            if(idx * chunksize + 2 > j){
+                result.z = ModP(result.z - Product64(ref.z, matrix_id_j_head));
+            }
+            if(idx * chunksize + 3 > j){
+                result.w = ModP(result.w - Product64(ref.w, matrix_id_j_head));
+            }
+            reinterpret_cast<uint4*>(Matrix)[id] = result;
+#else
+            if(idx > j){
+                Matrix[id] = Matrix[id] - Matrix[id_i] * matrix_id_j_head;
+            }
+#endif
+        }
+    }
+
+    __syncthreads();
+
     if (blockIdx.x != i && threadIdx.x == 0 && id_j_head < MaxMatrixId) {
-	Matrix[id_j_head] = 0;
+        Matrix[id_j_head] = 0;
     }
 }
 
@@ -166,45 +203,45 @@ __global__ void SetRowScales(matrix_type *Matrix) {
     int NbrColumnsPerIteration = ceil(NbrColumns / (1.0 * NbrFoldings));
 
     for (unsigned int r = 0; r < NbrFoldings; r++) {
-	int sdataId = threadIdx.x + r * blockDim.x;
-	int ColumnId = threadIdx.x + r * NbrColumnsPerIteration;
-	int MatrixId1 = RowId * NbrColumns + ColumnId;
-	int MatrixId2 = RowId * NbrColumns + ColumnId + blockDim.x;
-	if (MatrixId2 < (RowId + 1) * NbrColumns) {
-	    double value1 = abs(Matrix[MatrixId1]);
-	    double value2 = abs(Matrix[MatrixId2]);
-	    if (value1 > value2) {
-		sdata[sdataId] = value1;
-	    } else {
-		sdata[sdataId] = value2;
-	    }
-	} else { // This is for odd lengths: the last one doesn't have something to compare it to.
-	    sdata[sdataId] = abs(Matrix[MatrixId1]);
-	}
+        int sdataId = threadIdx.x + r * blockDim.x;
+        int ColumnId = threadIdx.x + r * NbrColumnsPerIteration;
+        int MatrixId1 = RowId * NbrColumns + ColumnId;
+        int MatrixId2 = RowId * NbrColumns + ColumnId + blockDim.x;
+        if (MatrixId2 < (RowId + 1) * NbrColumns) {
+            double value1 = abs(Matrix[MatrixId1]);
+            double value2 = abs(Matrix[MatrixId2]);
+            if (value1 > value2) {
+                sdata[sdataId] = value1;
+            } else {
+                sdata[sdataId] = value2;
+            }
+        } else { // This is for odd lengths: the last one doesn't have something to compare it to.
+            sdata[sdataId] = abs(Matrix[MatrixId1]);
+        }
     }
     __syncthreads();
 
     for (unsigned int r = 0; r < NbrFoldings; r++) {
-	int sdataId = threadIdx.x + r * blockDim.x;
-	for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
-	    if ((sdataId < s + r * blockDim.x) && ((sdataId + s) <= NbrColumns / 2) && sdata[sdataId] < sdata[sdataId + s]) {
-		sdata[sdataId] = sdata[sdataId + s];
-	    }
-	    __syncthreads();
-	}
+        int sdataId = threadIdx.x + r * blockDim.x;
+        for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
+            if ((sdataId < s + r * blockDim.x) && ((sdataId + s) <= NbrColumns / 2) && sdata[sdataId] < sdata[sdataId + s]) {
+                sdata[sdataId] = sdata[sdataId + s];
+            }
+            __syncthreads();
+        }
     }
 
     for (unsigned int s = (NbrFoldings + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
-	if (threadIdx.x < s) {
-	    int sdataId = 0 + s * threadIdx.x * blockDim.x;
-	    if (sdata[sdataId] < sdata[sdataId + blockDim.x]) {
-		sdata[sdataId] = sdata[sdataId + blockDim.x];
-	    }
-	}
+        if (threadIdx.x < s) {
+            int sdataId = 0 + s * threadIdx.x * blockDim.x;
+            if (sdata[sdataId] < sdata[sdataId + blockDim.x]) {
+                sdata[sdataId] = sdata[sdataId + blockDim.x];
+            }
+        }
     }
 
     if (threadIdx.x == 0) {
-	RowScales[blockIdx.x] = sdata[0];
+        RowScales[blockIdx.x] = sdata[0];
     }
 }
 
@@ -212,7 +249,7 @@ __global__ void RescaleRows (matrix_type *Matrix) {
     __shared__ double rowScale;
 
     if (threadIdx.x == 0) {
-	rowScale = RowScales[blockIdx.x];
+        rowScale = RowScales[blockIdx.x];
     }
     __syncthreads();
 
@@ -221,11 +258,11 @@ __global__ void RescaleRows (matrix_type *Matrix) {
     int NbrColumnsPerIteration = ceil(NbrColumns / (1.0 * NbrFoldings));
 
     for (unsigned int r = 0; r < NbrFoldings; r++) {
-	int ColumnId = threadIdx.x + r * NbrColumnsPerIteration;
-	int MatrixId = RowId * NbrColumns + ColumnId;
-	if (MatrixId < (RowId + 1) * NbrColumns) {
-	    Matrix[MatrixId] = Matrix[MatrixId] / rowScale;
-	}
+        int ColumnId = threadIdx.x + r * NbrColumnsPerIteration;
+        int MatrixId = RowId * NbrColumns + ColumnId;
+        if (MatrixId < (RowId + 1) * NbrColumns) {
+            Matrix[MatrixId] = Matrix[MatrixId] / rowScale;
+        }
     }
 }
 #endif
@@ -238,9 +275,9 @@ __global__ void SwitchRows(matrix_type *Matrix) {
     // printf("Switching rows %d and %d. Max value: %i. \\n ", i, IndexOfMaximum, Matrix[id_j + j]);
     // }
     if (id_j < (IndexOfMaximum + 1) * NbrColumns && id_i < MaxMatrixId && id_j < MaxMatrixId) {
-	matrix_type temporary = Matrix[id_i];
-	Matrix[id_i] = Matrix[id_j];
-	Matrix[id_j] = temporary;
+        matrix_type temporary = Matrix[id_i];
+        Matrix[id_i] = Matrix[id_j];
+        Matrix[id_j] = temporary;
     }
 }
 
@@ -263,41 +300,41 @@ __global__ void ThreadsReduceToMaxIndex(matrix_type *Matrix) {
     unsigned long int MatrixId2 = RowId2 * NbrColumns + j;
     if (RowId2 < NbrRows) {
 #if FIELD_CHARACTERISTIC == 0
-	double value1 = abs(Matrix[MatrixId1]);
-	double value2 = abs(Matrix[MatrixId2]);
+        double value1 = abs(Matrix[MatrixId1]);
+        double value2 = abs(Matrix[MatrixId2]);
 #else
-	matrix_type value1 = Matrix[MatrixId1];
-	matrix_type value2 = Matrix[MatrixId2];	
+        matrix_type value1 = Matrix[MatrixId1];
+        matrix_type value2 = Matrix[MatrixId2];	
 #endif
-	if (value1 > value2){
-	    idata[tid] = RowId1;
-	    sdata[tid] = value1;
-	} else {
-	    idata[tid] = RowId2;
-	    sdata[tid] = value2;
-	}
+        if (value1 > value2){
+            idata[tid] = RowId1;
+            sdata[tid] = value1;
+        } else {
+            idata[tid] = RowId2;
+            sdata[tid] = value2;
+        }
     } else if (RowId1 < NbrRows) {
-	idata[tid] = RowId1;
+        idata[tid] = RowId1;
 #if FIELD_CHARACTERISTIC == 0
-	sdata[tid] = abs(Matrix[MatrixId1]);
+        sdata[tid] = abs(Matrix[MatrixId1]);
 #else
-	sdata[tid] = Matrix[MatrixId1];
+        sdata[tid] = Matrix[MatrixId1];
 #endif
     }
     __syncthreads();
 
     for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
-	if ((tid < s) && ((tid + s) < blockDim.x) && (sdata[tid] < sdata[tid + s])){
-	    idata[tid] = idata[tid + s];
-	    sdata[tid] = sdata[tid + s];
-	}
-	__syncthreads();
+        if ((tid < s) && ((tid + s) < blockDim.x) && (sdata[tid] < sdata[tid + s])){
+            idata[tid] = idata[tid + s];
+            sdata[tid] = sdata[tid + s];
+        }
+        __syncthreads();
     }
 
     if (tid == 0 && NbrFoldings == 1){
-	IndexOfMaximum = idata[0];
+        IndexOfMaximum = idata[0];
     } else if (tid == 0) {
-	IndicesOfMaxmiumCandidates[blockIdx.x] = idata[0];
+        IndicesOfMaxmiumCandidates[blockIdx.x] = idata[0];
     }
 }
 
@@ -316,48 +353,48 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
     unsigned long int MatrixId2 = RowId2 * NbrColumns + j;
     if (MatrixId2 < MaxMatrixId && RowId2 >= i) {
 #if FIELD_CHARACTERISTIC == 0
-	double value1 = abs(Matrix[MatrixId1]);
-	double value2 = abs(Matrix[MatrixId2]);
+        double value1 = abs(Matrix[MatrixId1]);
+        double value2 = abs(Matrix[MatrixId2]);
 #else
-	matrix_type value1 = Matrix[MatrixId1];
-	matrix_type value2 = Matrix[MatrixId2];
+        matrix_type value1 = Matrix[MatrixId1];
+        matrix_type value2 = Matrix[MatrixId2];
 #endif
-	if (value1 > value2){
-	    idata[tid] = RowId1;
-	    sdata[tid] = value1;
-	} else {
-	    idata[tid] = RowId2;
-	    sdata[tid] = value2;
-	}
+        if (value1 > value2){
+            idata[tid] = RowId1;
+            sdata[tid] = value1;
+        } else {
+            idata[tid] = RowId2;
+            sdata[tid] = value2;
+        }
     } else if (MatrixId1 < MaxMatrixId && RowId1 >= i) {
-	idata[tid] = RowId1;
+        idata[tid] = RowId1;
 #if FIELD_CHARACTERISTIC == 0
-	sdata[tid] = abs(Matrix[MatrixId1]);
+        sdata[tid] = abs(Matrix[MatrixId1]);
 #else
-	sdata[tid] = Matrix[MatrixId1];
+        sdata[tid] = Matrix[MatrixId1];
 #endif
     }
 
     for (unsigned int s = (blockDim.x + 1) / 2; s > 0; (s == 1) ? s = 0 : s = s+1 >> 1) {
-	if ((tid < s) && ((tid + s) < blockDim.x) && (sdata[tid] < sdata[tid + s])){
-	    idata[tid] = idata[tid + s];
-	    sdata[tid] = sdata[tid + s];
-	}
-	__syncthreads();
+        if ((tid < s) && ((tid + s) < blockDim.x) && (sdata[tid] < sdata[tid + s])){
+            idata[tid] = idata[tid + s];
+            sdata[tid] = sdata[tid + s];
+        }
+        __syncthreads();
     }
 
     if (tid == 0){
-	IndexOfMaximum = idata[tid];
+        IndexOfMaximum = idata[tid];
     }
   
 }
 
 __global__ void IncrementCounters () {
     if (bHeadIsBiggerThanTollerance) {
-	i += 1;
-	j += 1;
+        i += 1;
+        j += 1;
     } else {
-	j += 1;
+        j += 1;
     }
 }
 
@@ -369,20 +406,20 @@ __global__ void CompareHeadToTollerance(matrix_type *Matrix) {
 #else
     if (MatrixId < MaxMatrixId && abs(Matrix[MatrixId]) > tollerance) {
 #endif
-	bHeadIsBiggerThanTollerance = true;
+        bHeadIsBiggerThanTollerance = true;
     } else {
-	bHeadIsBiggerThanTollerance = false;
+        bHeadIsBiggerThanTollerance = false;
     }
 }
 
 __global__ void ConditionalRescaleRow(matrix_type *Matrix) {
     if (bHeadIsBiggerThanTollerance == true){
-	RescaleRow(Matrix);
+        RescaleRow(Matrix);
     }
 }
 
 __global__ void ConditionalRowReduce(matrix_type *Matrix) {
     if (bHeadIsBiggerThanTollerance == true){
-	RowReduce(Matrix);
+        RowReduce(Matrix);
     }
 }
