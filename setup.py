@@ -29,6 +29,7 @@ setup(
     install_requires=[
         'numpy<2.0',
         'pyadic',
+        'syngular',
     ],
     extras_require=extras,
     classifiers=[
