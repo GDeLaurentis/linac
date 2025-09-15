@@ -49,7 +49,7 @@ def isclose_or_greater(x, y, *args, **kwargs):
 
 
 def drop_bottom_zero_rows(row_reduced_matrix):
-    while not isclose_or_greater(float(abs(row_reduced_matrix[-1]).max()), 1):
+    while len(row_reduced_matrix) > 0 and not isclose_or_greater(float(abs(row_reduced_matrix[-1]).max()), 1):
         row_reduced_matrix = row_reduced_matrix[:-1]
     return row_reduced_matrix
 
