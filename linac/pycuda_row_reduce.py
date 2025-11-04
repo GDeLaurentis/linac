@@ -16,7 +16,7 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 @timeit
-def cuda_row_reduce(matrix, field_characteristic=0, real=None, verbose=False):
+def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _mod64=None):
     r"""
     Args:
         matrix (2D ndarray):
@@ -35,16 +35,22 @@ def cuda_row_reduce(matrix, field_characteristic=0, real=None, verbose=False):
     NbrRows, NbrColumns = matrix.shape
 
     # Push Matrix To Device
-    if field_characteristic == 0:
-        if real or (real is None and numpy.max(numpy.vectorize(lambda x: x.imag)(matrix)) == 0):
+    if field_characteristic > 0:
+        _real = True  # doesn't matter
+        if _mod64 or (_mod64 is None and field_characteristic > 2 ** 31 - 1):
+            matrix_cpu = matrix.astype('uint64')
+            _mod64 = True
+        else:
+            matrix_cpu = matrix.astype('uint32')
+            _mod64 = False
+    else:
+        _mod64 = False  # doesn't matter
+        if _real or (_real is None and numpy.max(numpy.vectorize(lambda x: x.imag)(matrix)) == 0):
             matrix_cpu = numpy.vectorize(lambda x: x.real)(matrix).astype("float64")
-            real = True
+            _real = True
         else:  # runs with complex128
             matrix_cpu = matrix.astype("complex128")
-            real = False
-    else:  # runs with unsigned int (32 bits)
-        matrix_cpu = matrix.astype('uint32')
-        real = True
+            _real = False
     width = NbrColumns * matrix_cpu.dtype.itemsize
     height = NbrRows
 
@@ -71,7 +77,8 @@ def cuda_row_reduce(matrix, field_characteristic=0, real=None, verbose=False):
 
     exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
                                          NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, TRUE_NBR_COLUMNS=NbrColumns,
-                                         FIELD_CHARACTERISTIC=field_characteristic, REAL=int(real), )),
+                                         FIELD_CHARACTERISTIC=field_characteristic, REAL=int(_real), MOD64=int(_mod64),
+                                         EXTENSION='ULL' if _mod64 else 'u')),
          locals(), globals())
 
     if field_characteristic == 0:  # Set The Row Scales Array On The Gpu
