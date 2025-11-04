@@ -20,7 +20,7 @@ def row_reduce(matrix, pivoting=1, scaling=True, reduced_echelon=True, threshold
     """
     Row reduction to (reduced) echelon form on the cpu using numpy.
     The matrix is kept of whatever object type it is made of, unless prime is specified.
-    In the latter case the computation happens over numpy.int64 in a finite field of chardinality prime.
+    In the latter case the computation happens over numpy.int64 in a finite field of cardinality prime.
     """
     if prime == 0:
         prime = None
