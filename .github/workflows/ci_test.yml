@@ -31,6 +31,20 @@ jobs:
       with:
         path: linac-dev
 
+    - name: Checkout another Repo (pyadic)
+      uses: actions/checkout@v4
+      with:
+        repository: GDeLaurentis/pyadic
+        token: ${{ secrets.GitHubActions_PAT }}
+        path: pyadic
+
+    - name: Checkout another Repo (syngular)
+      uses: actions/checkout@v4
+      with:
+        repository: GDeLaurentis/syngular
+        token: ${{ secrets.GitHubActions_PAT }}
+        path: syngular
+
     - name: Check CUDA is discoverable
       run: |
         echo "CPATH=$CPATH"
