@@ -25,7 +25,7 @@ ring = Ring('0', ('x', 'y', 'z'), 'dp')
 
 
 @pytest.mark.parametrize(
-    "field", (Field("mpc", 0, 64), Field("finite field", 2 ** 31 - 1, 1), Field("padic", 2 ** 31 - 1, 5), )
+    "field", (Field("mpf", 0, 64), Field("mpc", 0, 64), Field("finite field", 2 ** 31 - 1, 1), Field("padic", 2 ** 31 - 1, 5), )
 )
 def test_matrix_loader_and_sys_solver(field):
     nInputs = sum(map(len, ansatze))
@@ -44,7 +44,7 @@ def test_matrix_loader_and_sys_solver(field):
     Ab = numpy.block([A, b])
     rref = cuda_row_reduce(Ab, field_characteristic=field.characteristic)
     if field.characteristic == 0:
-        numpy.isclose(rref[:, :-1], numpy.identity(Ab.shape[0], int)).all()
+        assert numpy.isclose(rref[:, :-1], numpy.identity(Ab.shape[0], int)).all()
     else:
         assert numpy.all(rref[:, :-1] == numpy.identity(Ab.shape[0], int))
     if field.characteristic == 0:

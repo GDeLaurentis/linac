@@ -4,6 +4,7 @@
 import os
 import math
 import time
+import numpy
 
 from linac.pycuda_tools import cuda_set_vars_and_get_funcs, number_of_foldings, folded_number_of_columns, round_to_multiple_of
 from linac.timeit_decorator import timeit
@@ -15,7 +16,16 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 @timeit
-def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
+def cuda_row_reduce(matrix, field_characteristic=0, real=None, verbose=False):
+    r"""
+    Args:
+        matrix (2D ndarray):
+            The matrix to be row-reduced.
+        field_characteristic (int, optional, default: 0):
+            The characteristic p of the field, or 0 for |$\mathbb{R}$| and |$\mathbb{C}$|.
+        verbose (bool, optional, default: False):
+            If True, prints additional information.
+    """
 
     import pycuda.driver as cuda
     import pycuda.autoinit                     # noqa
@@ -25,10 +35,16 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     NbrRows, NbrColumns = matrix.shape
 
     # Push Matrix To Device
-    if field_characteristic == 0:  # runs with complex128
-        matrix_cpu = matrix.astype("complex128")
+    if field_characteristic == 0:
+        if real or (real is None and numpy.max(numpy.vectorize(lambda x: x.imag)(matrix)) == 0):
+            matrix_cpu = numpy.vectorize(lambda x: x.real)(matrix).astype("float64")
+            real = True
+        else:  # runs with complex128
+            matrix_cpu = matrix.astype("complex128")
+            real = False
     else:  # runs with unsigned int (32 bits)
         matrix_cpu = matrix.astype('uint32')
+        real = True
     width = NbrColumns * matrix_cpu.dtype.itemsize
     height = NbrRows
 
@@ -54,12 +70,13 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False):
     matrix_copier(aligned=True)
 
     exec(str(cuda_set_vars_and_get_funcs(path_to_cuda_script=local_directory + "/row_reduce.cu",
-                                         NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, FIELD_CHARACTERISTIC=field_characteristic, )),
+                                         NBR_ROWS=NbrRows, NBR_COLUMNS=EffNbrColumns, TRUE_NBR_COLUMNS=NbrColumns,
+                                         FIELD_CHARACTERISTIC=field_characteristic, REAL=int(real), )),
          locals(), globals())
 
     if field_characteristic == 0:  # Set The Row Scales Array On The Gpu
-        CudaSetRowScales(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns, FoldingMaxLength=2048) / 2.0)), 1, 1), grid=(NbrRows, 1))  # noqa
-        CudaRescaleRows(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(NbrColumns))), 1, 1), grid=(NbrRows, 1))  # noqa
+        CudaSetRowScales(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(EffNbrColumns, FoldingMaxLength=2048) / 2.0)), 1, 1), grid=(NbrRows, 1))  # noqa
+        CudaRescaleRows(matrix_gpu, block=(int(math.ceil(folded_number_of_columns(EffNbrColumns))), 1, 1), grid=(NbrRows, 1))  # noqa
 
     time_on_gpu, time_pivoting, time_compare, time_rescale, time_reduce, time_increment = [], [], [], [], [], []
 
