@@ -1,4 +1,6 @@
-#define FIELD_CHARACTERISTIC {FIELD_CHARACTERISTIC}
+#define FIELD_CHARACTERISTIC {FIELD_CHARACTERISTIC}{EXTENSION}
+#define REAL {REAL}
+#define MOD64 {MOD64}
 #define NBR_ROWS {NBR_ROWS}
 #define NBR_COLUMNS {NBR_COLUMNS}
 #define BASIS_LENGTH {BASIS_LENGTH}
@@ -8,11 +10,24 @@
 #include <stdio.h>
 #include <math.h>
 #include <cuComplex.h>
+#include <stdint.h>
 
 #if FIELD_CHARACTERISTIC > 0
-typedef unsigned int matrix_type;
+  #if MOD64
+    using matrix_type = uint64_t;
+    using unsig_t     = uint64_t;
+    using wide_t      = unsigned __int128;
+  #else
+    using matrix_type = uint32_t;
+    using unsig_t     = uint32_t;
+    using wide_t      = uint64_t;
+  #endif
 #else
-typedef cuDoubleComplex matrix_type;
+  #if REAL
+    using matrix_type = double;          // real numbers (64-bit)
+  #else
+    using matrix_type = cuDoubleComplex; // complex numbers (2×64-bit)
+  #endif
 #endif
 
 
@@ -25,15 +40,19 @@ __device__ int NbrColumns = NBR_COLUMNS;
 __device__ int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ __constant__ unsigned int prime = FIELD_CHARACTERISTIC;
+__device__ __constant__ unsig_t prime = FIELD_CHARACTERISTIC;
 #endif
 
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ unsigned int mul (unsigned long int a, unsigned long int b);
+__device__ __forceinline__ unsig_t mul(unsig_t a, unsig_t b);
 #else
-__device__ inline cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b);
+  #if REAL
+__device__ __forceinline__ double mul(double a, double b);
+  #else
+__device__ __forceinline__ cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b);
+  #endif
 #endif
 
 // GLOBAL FUNCTIONS
@@ -46,13 +65,20 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ inline unsigned int mul (unsigned long int a, unsigned long int b) {
-    return (a * b) % prime;
+__device__ __forceinline__ unsig_t mul(unsig_t a, unsig_t b) {
+    wide_t prod = static_cast<wide_t>(a) * static_cast<wide_t>(b);
+    return static_cast<unsig_t>(prod % static_cast<wide_t>(FIELD_CHARACTERISTIC));
 }
 #else
-__device__ inline cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b) {
+  #if REAL
+__device__ __forceinline__ double mul(double a, double b) {
+    return a * b;
+}
+  #else
+__device__ __forceinline__ cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b) {
     return make_cuDoubleComplex(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);
 }
+  #endif
 #endif
 
 // GLOBAL FUNCTIONS

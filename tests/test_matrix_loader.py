@@ -25,7 +25,9 @@ ring = Ring('0', ('x', 'y', 'z'), 'dp')
 
 
 @pytest.mark.parametrize(
-    "field", (Field("mpf", 0, 64), Field("mpc", 0, 64), Field("finite field", 2 ** 31 - 1, 1), Field("padic", 2 ** 31 - 1, 5), )
+    "field", (Field("mpf", 0, 64), Field("mpc", 0, 64),
+              Field("finite field", 2 ** 31 - 1, 1), Field("padic", 2 ** 31 - 1, 5),
+              Field("finite field", 2 ** 61 - 1, 1), Field("padic", 2 ** 61 - 1, 5), )
 )
 def test_matrix_loader_and_sys_solver(field):
     nInputs = sum(map(len, ansatze))
