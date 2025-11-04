@@ -56,8 +56,6 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
     int FoldingLength = blockDim.x;
     int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
 
-    __syncthreads();
-
     for (int s = 0; s < ceil(double(BASIS_LENGTH)/blockDim.x); s++) {
         int basis_index = s * blockDim.x + threadIdx.x;
         if (basis_index < BASIS_LENGTH) {
