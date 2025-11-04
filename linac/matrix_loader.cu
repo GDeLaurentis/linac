@@ -7,11 +7,12 @@
 #include <pycuda-complex.hpp>
 #include <stdio.h>
 #include <math.h>
+#include <cuComplex.h>
 
 #if FIELD_CHARACTERISTIC > 0
 typedef unsigned int matrix_type;
 #else
-typedef pycuda::complex<double> matrix_type;
+typedef cuDoubleComplex matrix_type;
 #endif
 
 
@@ -30,7 +31,9 @@ __device__ __constant__ unsigned int prime = FIELD_CHARACTERISTIC;
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ unsigned int Product64 (unsigned long int a, unsigned long int b);
+__device__ unsigned int mul (unsigned long int a, unsigned long int b);
+#else
+__device__ inline cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b);
 #endif
 
 // GLOBAL FUNCTIONS
@@ -43,8 +46,12 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ unsigned int Product64 (unsigned long int a, unsigned long int b) {
+__device__ inline unsigned int mul (unsigned long int a, unsigned long int b) {
     return (a * b) % prime;
+}
+#else
+__device__ inline cuDoubleComplex mul(cuDoubleComplex a, cuDoubleComplex b) {
+    return make_cuDoubleComplex(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);
 }
 #endif
 
@@ -70,11 +77,7 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
         if (column_id < NbrColumns) {
             matrix[blockIdx.x * NbrColumns + column_id] = basis[indices[column_id * DEGREE]];
             for (int t = 1; t < DEGREE; t++) {
-#if FIELD_CHARACTERISTIC > 0
-            matrix[blockIdx.x * NbrColumns + column_id] = Product64(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * DEGREE + t]]);
-#else
-            matrix[blockIdx.x * NbrColumns + column_id] = matrix[blockIdx.x * NbrColumns + column_id] * basis[indices[column_id * DEGREE + t]];
-#endif
+                matrix[blockIdx.x * NbrColumns + column_id] = mul(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * DEGREE + t]]);
             }
         }
     }
