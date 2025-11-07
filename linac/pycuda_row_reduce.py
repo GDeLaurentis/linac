@@ -19,8 +19,8 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _mod64=None):
     r"""
     Args:
-        matrix (2D ndarray):
-            The matrix to be row-reduced.
+        matrix (2D numpy.ndarray):
+            The matrix to be cast to row-reduced echelon form.
         field_characteristic (int, optional, default: 0):
             The characteristic p of the field, or 0 for |$\mathbb{R}$| and |$\mathbb{C}$|.
         verbose (bool, optional, default: False):
@@ -37,7 +37,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
     # Push Matrix To Device
     if field_characteristic > 0:
         _real = True  # doesn't matter
-        if _mod64 or (_mod64 is None and field_characteristic > 2 ** 31 - 1):
+        if _mod64 or (_mod64 is None and field_characteristic > 2 ** 32 - 1):
             matrix_cpu = matrix.astype('uint64')
             _mod64 = True
         else:
@@ -106,7 +106,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
         time_pivoting[-1] += time.time()
 
         time_compare += [-time.time()]
-        CudaCompareHeadToTollerance(matrix_gpu, block=(1, 1, 1), grid=(1, 1))  # noqa
+        CudaCompareHeadToTolerance(matrix_gpu, block=(1, 1, 1), grid=(1, 1))  # noqa
         time_compare[-1] += time.time()
 
         time_rescale += [-time.time()]

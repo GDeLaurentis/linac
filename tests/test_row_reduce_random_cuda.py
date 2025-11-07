@@ -29,6 +29,8 @@ current_dir = Path(__file__).parent
         (2 ** 31 - 1, 1024),
         (2 ** 31 - 1, 2048),
         (2 ** 31 - 1, 3072),
+        (2 ** 31 + 11, 3072),
+        (2 ** 61 - 1, 2048),
     ]
 )
 @pytest.mark.skipif(not pycuda_found, reason="pycuda not found")

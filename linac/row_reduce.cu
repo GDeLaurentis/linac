@@ -2,7 +2,7 @@
 #define REAL {REAL}
 #define MOD64 {MOD64}
 #define NBR_ROWS {NBR_ROWS}
-#define NBR_COLUMNS {NBR_COLUMNS}  // Pitch - includes padding
+#define NBR_COLUMNS {NBR_COLUMNS}            // Pitch - includes padding
 #define TRUE_NBR_COLUMNS {TRUE_NBR_COLUMNS}  // True (logical) number of columns
 
 #include <pycuda-complex.hpp>
@@ -14,14 +14,12 @@
   #if MOD64
     using matrix_type = uint64_t;
     using unsig_t     = uint64_t;
-    using sig_t       = int64_t;
     using wide_t      = unsigned __int128;
     using pack_t      = ulonglong2;
     #define CHUNKSIZE 2
   #else
     using matrix_type = uint32_t;
     using unsig_t     = uint32_t;
-    using sig_t       = int32_t;
     using wide_t      = uint64_t;
     using pack_t      = uint4;
     #define CHUNKSIZE 4
@@ -47,13 +45,14 @@ __device__ __constant__ unsigned long int TrueNbrColumns = static_cast<unsigned 
 __device__ __constant__ unsigned long int MaxMatrixId = static_cast<unsigned long int>(NBR_ROWS) * static_cast<unsigned long int>(NBR_COLUMNS);
 __device__ unsigned long int i = 0;  // row counter
 __device__ unsigned long int j = 0;  // column counter
-__device__ bool bHeadIsBiggerThanTollerance = true;
+__device__ bool bHeadIsBiggerThanTolerance = true;
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ __constant__ unsig_t prime = FIELD_CHARACTERISTIC;
-__device__ int tollerance = 0;
+static constexpr unsig_t prime_u = static_cast<unsig_t>(FIELD_CHARACTERISTIC);
+static constexpr wide_t  prime_w = static_cast<wide_t>(FIELD_CHARACTERISTIC);
+__device__ int tolerance = 0;
 #else
-__device__ double tollerance = 0.000000001; // 10^-9
+__device__ double tolerance = 0.000000001; // 10^-9
 __device__ double RowScales[8192]; // 2^13
 #endif
 __device__ unsigned int IndexOfMaximum = 0;
@@ -62,9 +61,10 @@ __device__ unsigned int IndicesOfMaxmiumCandidates[128];
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ __forceinline__ unsig_t Inverse(unsig_t a);
-__device__ __forceinline__ unsig_t modp(sig_t a);
-__device__ __forceinline__ unsig_t product_mod(unsig_t a, unsig_t b) ;
+__device__ __forceinline__ unsig_t pow_mod(unsig_t base, unsig_t exp);
+__device__ __forceinline__ unsig_t inv_mod(unsig_t a);
+__device__ __forceinline__ unsig_t sub_mod(unsig_t a, unsig_t b);
+__device__ __forceinline__ unsig_t mul_mod(unsig_t a, unsig_t b) ;
 #endif
 __device__ void RescaleRow (matrix_type *Matrix);
 __device__ void RowReduce (matrix_type *Matrix);
@@ -72,7 +72,7 @@ __device__ void RowReduce (matrix_type *Matrix);
 // GLOBAL FUNCTIONS
 
 __global__ void IncrementCounters ();
-__global__ void CompareHeadToTollerance (matrix_type *Matrix);
+__global__ void CompareHeadToTolerance (matrix_type *Matrix);
 __global__ void ConditionalRescaleRow (matrix_type *Matrix);
 __global__ void ConditionalRowReduce (matrix_type *Matrix);
 __global__ void SwitchRows (matrix_type *Matrix);
@@ -89,33 +89,28 @@ __global__ void RescaleRows (matrix_type *Matrix);
 // DEVICE FUNCTIONS
 
 #if FIELD_CHARACTERISTIC > 0
-__device__ __forceinline__ unsig_t Inverse(unsig_t a) {
-    // Extended Euclid with signed temporaries, but unsigned IO.
-    // Assumes 0 < a < prime and prime fits in unsig_t.
-    sig_t old_r = static_cast<sig_t>(a), r = static_cast<sig_t>(prime);
-    sig_t old_s = 1, s = 0;
-
-    while (r != 0) {
-        sig_t q = old_r / r;
-        sig_t tmp = old_r - q * r; old_r = r; r = tmp;
-        tmp = old_s - q * s;       old_s = s; s = tmp;
+__device__ __forceinline__ unsig_t pow_mod(unsig_t base, unsig_t exp) {
+    unsig_t res = 1 % prime_u;
+    unsig_t x = base % prime_u;
+    while (exp) {
+        if (exp & 1) res = mul_mod(res, x);
+        x = mul_mod(x, x);
+        exp >>= 1;
     }
-    // old_s is the inverse modulo prime, normalize to [0, prime)
-    if (old_s < 0) old_s += static_cast<sig_t>(prime);
-    return static_cast<unsig_t>(old_s);
+    return res;
 }
 
-__device__ __forceinline__ unsig_t product_mod(unsig_t a, unsig_t b) {
+__device__ __forceinline__ unsig_t inv_mod(unsig_t a) {
+    return pow_mod(a, static_cast<unsig_t>(prime_u - 2));
+}
+
+__device__ __forceinline__ unsig_t mul_mod(unsig_t a, unsig_t b) {
     wide_t prod = static_cast<wide_t>(a) * static_cast<wide_t>(b);
-    return static_cast<unsig_t>(prod % static_cast<wide_t>(FIELD_CHARACTERISTIC));
+    return static_cast<unsig_t>(prod % prime_w);
 }
 
-__device__ __forceinline__ unsig_t modp(sig_t a) {
-    if (a < 0) {
-        return static_cast<unsig_t>(a + static_cast<sig_t>(prime));
-    } else {
-        return static_cast<unsig_t>(a);
-    }
+__device__ __forceinline__ unsig_t sub_mod(unsig_t a, unsig_t b) {
+    return (a < b) ? (a + prime_u - b) : (a - b);
 }
 #endif
 
@@ -124,9 +119,16 @@ __device__ void RescaleRow(matrix_type *Matrix) {
     unsigned long int id_i_head = i * NbrColumns + j;
     unsigned long int MaxId     = i * NbrColumns + TrueNbrColumns;
     unsigned long int id        = i * NbrColumns + FoldingLength * blockIdx.x + threadIdx.x;
+#if FIELD_CHARACTERISTIC > 0
+    __shared__ unsig_t shm_inv;
+    if (threadIdx.x == 0) {
+        shm_inv = inv_mod(static_cast<unsig_t>(Matrix[id_i_head]));
+    }
+    __syncthreads();
+#endif
     if (id < MaxId) {
 #if FIELD_CHARACTERISTIC > 0
-        Matrix[id] = product_mod(Matrix[id], Inverse(Matrix[id_i_head]));
+        Matrix[id] = mul_mod(Matrix[id], shm_inv);
 #else
         Matrix[id] = Matrix[id] / Matrix[id_i_head];
 #endif
@@ -157,17 +159,17 @@ __device__ void RowReduce(matrix_type *Matrix) {
         pack_t ref = reinterpret_cast<pack_t*>(Matrix)[id_i];
   #if FIELD_CHARACTERISTIC > 0
         if(idx * CHUNKSIZE > j){
-            result.x = modp(result.x - product_mod(ref.x, matrix_id_j_head));
+            result.x = sub_mod(result.x, mul_mod(ref.x, matrix_id_j_head));
         }
         if(idx * CHUNKSIZE + 1 > j){
-            result.y = modp(result.y - product_mod(ref.y, matrix_id_j_head));
+            result.y = sub_mod(result.y, mul_mod(ref.y, matrix_id_j_head));
         }
     #if !MOD64
         if(idx * CHUNKSIZE + 2 > j){
-            result.z = modp(result.z - product_mod(ref.z, matrix_id_j_head));
+            result.z = sub_mod(result.z, mul_mod(ref.z, matrix_id_j_head));
         }
         if(idx * CHUNKSIZE + 3 > j){
-            result.w = modp(result.w - product_mod(ref.w, matrix_id_j_head));
+            result.w = sub_mod(result.w, mul_mod(ref.w, matrix_id_j_head));
         }
     #endif
   #elif REAL
@@ -391,7 +393,7 @@ __global__ void BlocksReduceToMaxIndex(matrix_type *Matrix) {
 }
 
 __global__ void IncrementCounters () {
-    if (bHeadIsBiggerThanTollerance) {
+    if (bHeadIsBiggerThanTolerance) {
         i += 1;
         j += 1;
     } else {
@@ -399,7 +401,7 @@ __global__ void IncrementCounters () {
     }
 }
 
-__global__ void CompareHeadToTollerance(matrix_type *Matrix) {
+__global__ void CompareHeadToTolerance(matrix_type *Matrix) {
     unsigned long int MatrixId = i * NbrColumns + j;
     // printf("Head MatrixId %li. \\n ", MatrixId);
     // printf("Head MaxMatrixId %li. \\n ", MaxMatrixId);
@@ -407,22 +409,22 @@ __global__ void CompareHeadToTollerance(matrix_type *Matrix) {
 #if FIELD_CHARACTERISTIC > 0
     if (MatrixId < MaxMatrixId && Matrix[MatrixId] != 0) {
 #else
-    if (MatrixId < MaxMatrixId && abs(Matrix[MatrixId]) > tollerance) {
+    if (MatrixId < MaxMatrixId && abs(Matrix[MatrixId]) > tolerance) {
 #endif
-        bHeadIsBiggerThanTollerance = true;
+        bHeadIsBiggerThanTolerance = true;
     } else {
-        bHeadIsBiggerThanTollerance = false;
+        bHeadIsBiggerThanTolerance = false;
     }
 }
 
 __global__ void ConditionalRescaleRow(matrix_type *Matrix) {
-    if (bHeadIsBiggerThanTollerance == true){
+    if (bHeadIsBiggerThanTolerance == true){
         RescaleRow(Matrix);
     }
 }
 
 __global__ void ConditionalRowReduce(matrix_type *Matrix) {
-    if (bHeadIsBiggerThanTollerance == true){
+    if (bHeadIsBiggerThanTolerance == true){
         RowReduce(Matrix);
     }
 }
