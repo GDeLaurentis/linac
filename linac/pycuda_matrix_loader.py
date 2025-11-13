@@ -40,7 +40,7 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
             _mod64 = False
     else:
         _mod64 = False  # doesn't matter
-        if _real or (_real is None and numpy.max(numpy.vectorize(lambda x: x.imag)(bases[0])) == 0):
+        if _real or (_real is None and numpy.max(numpy.abs(numpy.vectorize(lambda x: x.imag)(bases[0]))) == 0):
             dtype = 'float64'
             _real = True
         else:  # runs with complex128
