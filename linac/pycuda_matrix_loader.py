@@ -130,7 +130,8 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True):
             lindices[j, k + 1] = len(bases[0]) - 1
         if len(lindices) > 0:
             if use_cuda:
-                As += [cuda_load_matrix(bases, lindices, (bases.shape[0], lindices.shape[0]), field_characteristic=field.characteristic)]
+                As += [cuda_load_matrix(bases, lindices, (bases.shape[0], lindices.shape[0]),
+                                        field_characteristic=field.characteristic, _real=(python_type is float))]
             else:
                 if field.characteristic > 0:
                     As += [numpy.array([[reduce(lambda a, b: int(a) * int(b) % field.characteristic,  # int avoids overflow
