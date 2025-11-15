@@ -8,6 +8,8 @@ import bisect
 import numpy
 
 from fractions import Fraction
+from syngular import Q, Qi
+
 from linac.row_reduce import row_reduce
 from linac.pycuda_row_reduce import cuda_row_reduce
 from linac.linear_algebra_tools import non_pivot_columns_from_row_reduced_echelon_form, drop_bottom_zero_rows
@@ -91,7 +93,10 @@ def rationalise(complex_number, denominator_limit=10 ** 3):
     else:
         real = Fraction(str(complex_number.real)).limit_denominator(denominator_limit)
         imag = Fraction(str(complex_number.imag)).limit_denominator(denominator_limit)
-    return (real, imag)
+    if imag == 0:
+        return Q(real)
+    else:
+        return Qi(real, imag)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

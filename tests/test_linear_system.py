@@ -82,6 +82,7 @@ def test_iterative_linear_solver(cached_matrix_relative_path, field_characterist
     assert dropped_zeros[-1] == known_nbr_dropped_zero
     if field_characteristic == 0:
         rational_solution = list(map(rationalise, solution))
+        rational_solution = [(entry.real, entry.imag) for entry in rational_solution]
     else:
         rationalise_currentFF = functools.partial(rationalise_FF, n=field_characteristic)
         rational_solution = list(map(rationalise_currentFF, solution))
@@ -104,5 +105,6 @@ def test_mpc_linear_solver(cached_matrix_relative_path, known_nbr_dropped_redund
     assert droped_redundants[-1] == known_nbr_dropped_redundant
     dropped_zeros = list(map(int, re.findall(r"dropped_zero: (\d+),", "".join(output))))
     assert dropped_zeros[-1] == known_nbr_dropped_zero
-    rational_solution = list(zip(*numpy.vectorize(rationalise)(solution)))
+    rational_solution = numpy.vectorize(rationalise)(solution)
+    rational_solution = [(entry.real, entry.imag) for entry in rational_solution]
     assert rational_solution == known_rational_solution
