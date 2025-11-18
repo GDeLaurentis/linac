@@ -88,7 +88,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
     time_on_gpu, time_pivoting, time_compare, time_rescale, time_reduce, time_increment = [], [], [], [], [], []
 
     # Reduction To Reduced Echelon Form
-    for i in range(max(NbrRows, NbrColumns)):
+    for i in range(NbrColumns):
 
         if verbose:  # perhaps limit printing rate
             print(f"\r@{i}/{max(NbrRows, NbrColumns)}               ", end="")
@@ -129,8 +129,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
 
     if verbose:
         print("\rTime elapsed on gpu: ", sum(time_on_gpu), ". ", end="\n")
-        if field_characteristic == 0:
-            print("time_pivoting", sum(time_pivoting), end="\n")
+        print("time_pivoting", sum(time_pivoting), end="\n")
         print("time_compare", sum(time_compare), end="\n")
         print("time_rescale", sum(time_rescale), end="\n")
         print("time_reduce", sum(time_reduce), end="\n")
