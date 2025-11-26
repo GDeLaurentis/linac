@@ -2,6 +2,7 @@ import diskcache
 import time
 import random
 import numpy
+import pickle
 
 from linac import tensor_function
 
@@ -95,3 +96,23 @@ def test_caching_speeds_up():
 
     assert numpy.all(result_uncached == result_cached), "Results differ!"
     assert time_cached < time_uncached, f"Caching didn't speed things up: uncached={time_uncached:.6f}s, cached={time_cached:.6f}s"
+
+
+def test_tf_slice_is_picklable():
+    oFs = tensor_function(fs)
+    original = oFs[:2, :2]
+
+    dumped = pickle.dumps(original)
+    loaded = pickle.loads(dumped)
+
+    assert numpy.all(original(1, 2) == loaded(1, 2))
+
+
+def test_tf_flatten_is_picklable():
+    oFs = tensor_function(fs)
+    original = oFs.flatten()
+
+    dumped = pickle.dumps(original)
+    loaded = pickle.loads(dumped)
+
+    assert numpy.all(original(1, 2) == loaded(1, 2))

@@ -44,14 +44,26 @@ class tensor_function(object):
         if hasattr(callable_function, "__name__"):
             self.__name__ = callable_function.__name__
 
+    @staticmethod
+    def _flatten_call(base, *args, **kwargs):
+        """Helper for tensor_function.flatten to make it picklable."""
+        return base(*args, **kwargs).flatten()
+
     def flatten(self):
-        selfFlattened = self.__class__(lambda *args, **kwargs: self(*args, **kwargs).flatten())
+        func = functools.partial(self._flatten_call, self)
+        selfFlattened = self.__class__(func)
         if hasattr(self, '__shape__'):
             selfFlattened.shape = (functools.reduce(operator.mul, self.__shape__), )
         return selfFlattened
 
+    @staticmethod
+    def _getitem_call(base, index, *args, **kwargs):
+        """Helper for tensor_function.__getitem__ to make it picklable."""
+        return base(*args, **kwargs)[index]
+
     def __getitem__(self, index):
-        new = self.__class__(lambda *args, **kwargs: self(*args, **kwargs)[index])
+        func = functools.partial(self._getitem_call, self, index)
+        new = self.__class__(func)
         try:  # try to update shape
             dummy = numpy.empty(self.__shape__)
             result_shape = numpy.shape(dummy[index])
