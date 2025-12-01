@@ -2,6 +2,8 @@ import functools
 import operator
 import numpy
 
+from syngular import Field
+
 
 def memoized(*decorator_args, **decorator_kwargs):
     """Diskcaching decorator generator."""
@@ -106,3 +108,11 @@ class tensor_function(object):
         selfFlattened = self.flatten()
         for i in range(selfFlattened.shape[0]):
             yield selfFlattened[i]
+
+    def as_span(self, input_generator, field=Field("finite field", 2 ** 31 - 1, 1), **vs_kwargs, ):
+        """
+        Return the VectorSpaceOfFunctions spanned by the components of this tensor_function.
+        All arguments are passed directly to VectorSpaceOfFunctions.
+        """
+        from .vector_spaces.over_function_fields import VectorSpaceOfFunctions
+        return VectorSpaceOfFunctions(self.flatten(), input_generator, field=field, **vs_kwargs, )

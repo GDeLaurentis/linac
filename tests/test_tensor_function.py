@@ -5,6 +5,7 @@ import numpy
 import pickle
 
 from linac import tensor_function
+from syngular import Field
 
 
 def fs(x, y):
@@ -116,3 +117,19 @@ def test_tf_flatten_is_picklable():
     loaded = pickle.loads(dumped)
 
     assert numpy.all(original(1, 2) == loaded(1, 2))
+
+
+def test_tf_to_span():
+    oFs = tensor_function(lambda point: fs(*point))
+    field = Field("finite field", 2 ** 31 - 1, 1)
+
+    def ftest1(point):
+        x, y = point
+        return x + 123 * y
+
+    def ftest2(point):
+        x, y = point
+        return x ** 3
+
+    assert ftest1 in oFs.as_span(lambda seed: (field.random(), field.random()), field=field)
+    assert ftest2 not in oFs.as_span(lambda seed: (field.random(), field.random()), field=field)
