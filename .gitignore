@@ -7,3 +7,5 @@ __pycache__
 dist/
 htmlcov
 tests/test_data/large_linear_system_matrix_non_redundant.npy
+build/
+docs/

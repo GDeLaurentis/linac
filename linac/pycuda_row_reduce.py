@@ -22,7 +22,7 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
         matrix (2D numpy.ndarray):
             The matrix to be cast to row-reduced echelon form.
         field_characteristic (int, optional, default: 0):
-            The characteristic p of the field, or 0 for |$\mathbb{R}$| and |$\mathbb{C}$|.
+            The characteristic p of the field, or 0 for real and complex matrices.
         verbose (bool, optional, default: False):
             If True, prints additional information.
     """
