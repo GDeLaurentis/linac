@@ -103,7 +103,7 @@ class VectorSpaceOfFunctions(object):
     @staticmethod
     @functools.lru_cache()
     def _numerical_matrix_repr(functions, random_points, Cores=8, verbose=False):
-        matrix = mapThreads(functions, random_points, Cores=Cores, UseParallelisation=True, verbose=verbose)
+        matrix = mapThreads(functions, random_points, Cores=Cores, UseParallelisation=(Cores > 1), verbose=verbose)
         matrix = numpy.array(matrix).astype('uint32')
         return matrix
 

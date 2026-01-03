@@ -26,6 +26,9 @@ setup(
     author_email='g.dl@hotmail.it',
     packages=find_packages(),
     include_package_data=True,
+    package_data={
+        'linac': ['*.cu', ],
+    },
     install_requires=[
         'numpy<2.0',
         'pyadic',
