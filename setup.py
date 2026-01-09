@@ -31,6 +31,7 @@ setup(
     },
     install_requires=[
         'numpy<2.0',
+        'pycoretools',
         'pyadic',
         'syngular',
     ],
