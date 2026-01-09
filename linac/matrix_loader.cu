@@ -35,9 +35,9 @@
 
 // DEVICE VARIABLES
 
-__device__ int NbrRows = NBR_ROWS;
-__device__ int NbrColumns = NBR_COLUMNS;
-__device__ int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
+__device__ __constant__ unsigned long int NbrRows = NBR_ROWS;
+__device__ __constant__ unsigned long int NbrColumns = NBR_COLUMNS;
+__device__ __constant__ unsigned long int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
 
 #if FIELD_CHARACTERISTIC > 0
 __device__ __constant__ unsig_t prime = FIELD_CHARACTERISTIC;

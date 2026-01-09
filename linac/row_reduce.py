@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Author: Giuseppe
 # Created: 10/07/2018 - Updated: 12/02/2021
 

@@ -13,7 +13,7 @@ import numpy
 from operator import mul
 from functools import reduce
 from copy import deepcopy
-from syngular import flatten
+from pycoretools import flatten
 
 from .timeit_decorator import timeit
 
@@ -101,9 +101,9 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True):
     # build numerical bases
     variables = ['1'] + sorted(list(set(flatten(ansatze))), key=lambda x: len(x))
     if isinstance(points, dict):
-        bases_spinors = numpy.vectorize(python_type, otypes='O')(numpy.array([points[var] for var in variables]).T.copy())
+        bases_monomials = numpy.vectorize(python_type, otypes='O')(numpy.array([points[var] for var in variables]).T.copy())
     else:
-        bases_spinors = numpy.array([[python_type(point(var)) for var in variables] for point in points])
+        bases_monomials = numpy.array([[python_type(point(var)) for var in variables] for point in points])
 
     # complete build matrices
     As = []
@@ -115,7 +115,7 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True):
             bases_prefactor = numpy.array([[python_type(point(prefactor)) if isinstance(prefactor, str)
                                             else 1 if prefactor(point) == 1
                                             else python_type(prefactor(point))] for point in points])
-        bases = numpy.block([bases_spinors, bases_prefactor])
+        bases = numpy.block([bases_monomials, bases_prefactor])
         result_is_vector = bases.ndim < 2
         bases = numpy.atleast_2d(bases)
 
@@ -123,10 +123,10 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True):
             bases = bases % field.characteristic
 
         lindices = numpy.zeros((len(ansatze[i]), (len(ansatze[i][0]) if len(ansatze[i]) > 0 else 0) + 1), dtype='uint32')
-        for j, product_of_spinor_products in enumerate(ansatze[i]):
+        for j, product_of_variables in enumerate(ansatze[i]):
             k = -1
-            for k, spinor_bracket in enumerate(product_of_spinor_products):
-                lindices[j, k] = variables.index(spinor_bracket)
+            for k, variable in enumerate(product_of_variables):
+                lindices[j, k] = variables.index(variable)
             lindices[j, k + 1] = len(bases[0]) - 1
         if len(lindices) > 0:
             if use_cuda:
