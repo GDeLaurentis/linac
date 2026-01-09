@@ -31,6 +31,9 @@ def cuda_row_reduce(matrix, field_characteristic=0, verbose=False, _real=None, _
     import pycuda.autoinit                     # noqa
     from pycuda.compiler import SourceModule   # noqa
 
+    if True:  # debug - check cuda context per thread/process, useful when parallelising
+        print(f"[pid {os.getpid()}] ctx={cuda.Context.get_current()}")
+
     # Compile Cuda Code - sets Cuda* Functions
     NbrRows, NbrColumns = matrix.shape
 
