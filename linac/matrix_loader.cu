@@ -35,6 +35,8 @@
 
 // DEVICE VARIABLES
 
+__device__ __constant__ unsigned long int basis_length = BASIS_LENGTH;
+__device__ __constant__ unsigned long int degree = DEGREE;
 __device__ __constant__ unsigned long int NbrRows = NBR_ROWS;
 __device__ __constant__ unsigned long int NbrColumns = NBR_COLUMNS;
 __device__ __constant__ unsigned long int MaxMatrixId = NBR_ROWS * NBR_COLUMNS;
@@ -89,10 +91,10 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
     int FoldingLength = blockDim.x;
     int NbrFoldings = ceil(NbrColumns / (1.0 * FoldingLength));
 
-    for (int s = 0; s < ceil(double(BASIS_LENGTH)/blockDim.x); s++) {
+    for (int s = 0; s < ceil(double(basis_length)/blockDim.x); s++) {
         int basis_index = s * blockDim.x + threadIdx.x;
-        if (basis_index < BASIS_LENGTH) {
-            basis[basis_index] = bases[blockIdx.x * BASIS_LENGTH + basis_index];
+        if (basis_index < basis_length) {
+            basis[basis_index] = bases[blockIdx.x * basis_length + basis_index];
         }
     }
 
@@ -101,9 +103,9 @@ __global__ void LoadMatrix (matrix_type *matrix, matrix_type *bases, int *indice
     for (int s = 0; s < NbrFoldings; s++) {
         int column_id = threadIdx.x + s * FoldingLength;
         if (column_id < NbrColumns) {
-            matrix[blockIdx.x * NbrColumns + column_id] = basis[indices[column_id * DEGREE]];
-            for (int t = 1; t < DEGREE; t++) {
-                matrix[blockIdx.x * NbrColumns + column_id] = mul(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * DEGREE + t]]);
+            matrix[blockIdx.x * NbrColumns + column_id] = basis[indices[column_id * degree]];
+            for (int t = 1; t < degree; t++) {
+                matrix[blockIdx.x * NbrColumns + column_id] = mul(matrix[blockIdx.x * NbrColumns + column_id], basis[indices[column_id * degree + t]]);
             }
         }
     }

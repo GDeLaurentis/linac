@@ -9,6 +9,7 @@
 
 import os
 import numpy
+import time
 
 from operator import mul
 from functools import reduce
@@ -21,7 +22,7 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 @timeit
-def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None, _mod64=None):
+def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None, _mod64=None, verbose=False):
     """Load matrix on gpu by parellelizing multiplication - requires uniform degree entries"""
     nRows, nColumns = shape
 
@@ -47,6 +48,9 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
             dtype = 'complex128'
             _real = False
 
+    time_compiling, time_on_gpu = [], []
+
+    time_compiling += [-time.time()]
     # Compile Cuda Code
     exec(str(cuda_set_vars_and_get_funcs(
         path_to_cuda_script=local_directory + "/matrix_loader.cu",
@@ -55,6 +59,7 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
         BASIS_LENGTH=len(bases[0]), NBR_ROWS=nRows,
         NBR_COLUMNS=nColumns, DEGREE=len(lindices[0]), )),
         locals(), globals())
+    time_compiling[-1] += time.time()
 
     # Push Bases And Indices To Device
     bases = bases.astype(dtype)
@@ -68,16 +73,22 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
     matrix_gpu = cuda.mem_alloc(matrix_cpu.size * matrix_cpu.dtype.itemsize)
     cuda.memcpy_htod(matrix_gpu, matrix_cpu)
 
+    time_on_gpu += [-time.time()]
     # Load Matrix On GPGPU
     CudaLoadMatrix(matrix_gpu, bases_gpu, lindices_gpu, block=(folded_number_of_columns(nColumns), 1, 1), grid=(nRows, 1))  # noqa
+    time_on_gpu[-1] += time.time()
 
     # Pull Loaded Matrix Back To Host
     cuda.memcpy_dtoh(matrix_cpu, matrix_gpu)
 
+    if verbose:
+        print("\rTime elapsed on gpu: ", sum(time_on_gpu), ". ", end="\n")
+        print("time compiling", sum(time_compiling), end="\n")
+
     return matrix_cpu
 
 
-def load_matrices(prefactors, ansatze, points, use_cuda=True):
+def load_matrices(prefactors, ansatze, points, use_cuda=True, verbose=False):
     if isinstance(points, dict):
         field = points['field']
     else:
@@ -131,7 +142,7 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True):
         if len(lindices) > 0:
             if use_cuda:
                 As += [cuda_load_matrix(bases, lindices, (bases.shape[0], lindices.shape[0]),
-                                        field_characteristic=field.characteristic, _real=(python_type is float))]
+                                        field_characteristic=field.characteristic, _real=(python_type is float), verbose=verbose)]
             else:
                 if field.characteristic > 0:
                     As += [numpy.array([[reduce(lambda a, b: int(a) * int(b) % field.characteristic,  # int avoids overflow
