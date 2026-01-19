@@ -17,6 +17,8 @@ from copy import deepcopy
 from pycoretools import flatten
 
 from .timeit_decorator import timeit
+from ._optional import GALOIS_FOUND
+
 
 local_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -48,7 +50,7 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
             dtype = 'complex128'
             _real = False
 
-    time_compiling, time_on_gpu = [], []
+    time_compiling, time_allocating, time_reducing = [], [], []
 
     time_compiling += [-time.time()]
     # Compile Cuda Code
@@ -60,6 +62,8 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
         NBR_COLUMNS=nColumns, DEGREE=len(lindices[0]), )),
         locals(), globals())
     time_compiling[-1] += time.time()
+
+    time_allocating += [-time.time()]
 
     # Push Bases And Indices To Device
     bases = bases.astype(dtype)
@@ -73,22 +77,29 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
     matrix_gpu = cuda.mem_alloc(matrix_cpu.size * matrix_cpu.dtype.itemsize)
     cuda.memcpy_htod(matrix_gpu, matrix_cpu)
 
-    time_on_gpu += [-time.time()]
+    time_allocating[-1] += time.time()
+
+    time_reducing += [-time.time()]
     # Load Matrix On GPGPU
     CudaLoadMatrix(matrix_gpu, bases_gpu, lindices_gpu, block=(folded_number_of_columns(nColumns), 1, 1), grid=(nRows, 1))  # noqa
-    time_on_gpu[-1] += time.time()
+    time_reducing[-1] += time.time()
+
+    time_allocating += [-time.time()]
 
     # Pull Loaded Matrix Back To Host
     cuda.memcpy_dtoh(matrix_cpu, matrix_gpu)
 
+    time_allocating[-1] += time.time()
+
     if verbose:
-        print("\rTime elapsed on gpu: ", sum(time_on_gpu), ". ", end="\n")
-        print("time compiling", sum(time_compiling), end="\n")
+        print("time compiling ", sum(time_compiling), end="\n")
+        print("time alloc/copy", sum(time_allocating), end="\n")
+        print("time reducing  ", sum(time_reducing), end="\n")
 
     return matrix_cpu
 
 
-def load_matrices(prefactors, ansatze, points, use_cuda=True, verbose=False):
+def load_matrices(prefactors, ansatze, points, use_cuda=True, _use_galois=True, verbose=False):
     if isinstance(points, dict):
         field = points['field']
     else:
@@ -145,9 +156,21 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True, verbose=False):
                                         field_characteristic=field.characteristic, _real=(python_type is float), verbose=verbose)]
             else:
                 if field.characteristic > 0:
-                    As += [numpy.array([[reduce(lambda a, b: int(a) * int(b) % field.characteristic,  # int avoids overflow
-                                                [base[index] for index in indices]) for indices in lindices] for base in bases],
-                                       dtype='uint64' if field.characteristic > 2 ** 31 - 1 else 'uint32')]
+                    if GALOIS_FOUND and _use_galois:
+                        import galois
+                        GFp = galois.GF(field.characteristic)
+                        GFpbases = GFp(bases)
+                        cols = []
+                        for indices in lindices:
+                            cols.append(numpy.prod(GFpbases[:, indices], axis=1))
+                        A_gf = numpy.stack(cols, axis=1)
+                        A = A_gf.view(numpy.ndarray)
+                        dtype = numpy.uint64 if field.characteristic > 2**32 - 1 else numpy.uint32
+                        As += [A.astype(dtype, copy=False)]
+                    else:
+                        As += [numpy.array([[reduce(lambda a, b: int(a) * int(b) % field.characteristic,  # int avoids overflow
+                                                    [base[index] for index in indices]) for indices in lindices] for base in bases],
+                                           dtype='uint64' if field.characteristic > 2 ** 32 - 1 else 'uint32')]
                 else:
                     As += [numpy.array([[reduce(mul, [base[index] for index in indices]) for indices in lindices] for base in bases])]
         else:
