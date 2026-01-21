@@ -9,7 +9,10 @@ with (this_directory / "linac" / "version.py").open() as f:
 
 
 extras = {
-    'cuda': ['pycuda'],
+    'cuda': [
+        "pycuda<=2025.1.2; python_version<'3.10'",
+        "pycuda; python_version>='3.10'",
+    ],
     'dev': ['mpmath', 'diskcache', 'pytest', 'pytest-cov', 'flake8'],
 }
 extras['full'] = extras['cuda'] + extras['dev']
