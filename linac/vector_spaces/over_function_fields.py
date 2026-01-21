@@ -52,9 +52,9 @@ class VectorSpaceOfFunctions(object):
             iteration * iteration_step, self.iteration_start + iteration * iteration_step + iteration_step)]
         A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points), Cores=self.Cores, verbose=self.verbose)
         if self.uses_gpu:
-            rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic)
+            rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic, verbose=self.verbose)
         else:
-            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, )
+            rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, verbose=self.verbose)
         while not numpy.all(rref[-1, :] == 0):
             iteration += 1
             if iteration > max_iteration:
