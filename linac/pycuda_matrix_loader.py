@@ -24,14 +24,38 @@ local_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 @timeit
-def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None, _mod64=None, verbose=False):
-    """Load matrix on gpu by parellelizing multiplication - requires uniform degree entries"""
-    nRows, nColumns = shape
+def cuda_load_matrix(bases, lindices, shape=None, field_characteristic=0, _real=None, _mod64=None, verbose=False):
+    """
+    Construct a dense matrix on the GPU by evaluating monomials as products of precomputed base values.
+
+    Parameters
+    ----------
+    bases : (n_rows, basis_length) array
+        Variable values per row/point (optionally including a prefactor column).
+    lindices : (n_cols, degree) uint32 array
+        Each row specifies a monomial as indices into `bases` (assumes uniform degree).
+    field_characteristic : int, default 0
+        Modulus p for finite fields or p-adics leading digit; 0 selects real/complex arithmetic.
+
+    Returns
+    -------
+    A : (n_rows, n_cols) ndarray
+        Matrix representing the linear system.
+    """
 
     import pycuda.driver as cuda
     import pycuda.autoinit                    # noqa
     from pycuda.compiler import SourceModule  # noqa
     from linac.pycuda_tools import cuda_set_vars_and_get_funcs, folded_number_of_columns
+
+    nRows = bases.shape[0]
+    nColumns = lindices.shape[0]
+
+    if shape is not None:
+        assert shape == (nRows, nColumns), (
+            f"Shape mismatch: provided {shape}, "
+            f"inferred {(nRows, nColumns)}"
+        )
 
     if field_characteristic > 0:
         _real = True  # doesn't matter
@@ -100,6 +124,26 @@ def cuda_load_matrix(bases, lindices, shape, field_characteristic=0, _real=None,
 
 
 def load_matrices(prefactors, ansatze, points, use_cuda=True, _use_galois=True, verbose=False):
+    """
+    Build one or more matrices representing polynomial linear systems evaluated at numerical points.
+
+    Parameters
+    ----------
+    prefactors : list
+        One prefactor per system (string key or callable), e.g. inverse denominators for rational functions.
+    ansatze : list
+        One ansatz per system; each ansatz is a list of monomials, i.e. a polynomial with unknown coefficients.
+    points : list or dict
+        Numerical evaluation points (vectorised), including a field descriptor (e.g. a ``syngular.RingPoints`` list subclass).
+    use_cuda : bool, default True
+        Use CUDA backend when available.
+
+    Returns
+    -------
+    As : list of ndarrays
+        One matrix per system.
+    """
+
     if isinstance(points, dict):
         field = points['field']
     else:
