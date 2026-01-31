@@ -48,19 +48,17 @@ class VectorSpaceOfFunctions(object):
         if self.verbose:
             print("Obtaining pivots")
         iteration, iteration_step, max_iteration = 0, self.iteration_step, self.max_iteration
-        random_points = [self.input_generator(i) for i in range(
-            iteration * iteration_step, self.iteration_start + iteration * iteration_step + iteration_step)]
+        random_points = [self.input_generator(i) for i in range(self.iteration_start)]
         A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points), Cores=self.Cores, verbose=self.verbose)
         if self.uses_gpu:
             rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic, verbose=self.verbose)
         else:
             rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, verbose=self.verbose)
         while not numpy.all(rref[-1, :] == 0):
-            iteration += 1
-            if iteration > max_iteration:
-                raise Exception(f"Vector space exceeded dimension {iteration_step * max_iteration}")
+            if iteration >= max_iteration:
+                raise Exception(f"Vector space exceeded dimension {self.iteration_start + iteration_step * max_iteration}")
             random_points = [self.input_generator(i) for i in range(
-                self.iteration_start + iteration * iteration_step, self.iteration_start + iteration * iteration_step + iteration_step)]
+                self.iteration_start + iteration * iteration_step, self.iteration_start + (iteration + 1) * iteration_step)]
             _A = self._numerical_matrix_repr(self.all_functions_evaluator, tuple(random_points), Cores=self.Cores, verbose=self.verbose)
             A = numpy.block([[A], [_A]])
             if self.verbose:
@@ -69,6 +67,7 @@ class VectorSpaceOfFunctions(object):
                 rref = cuda_row_reduce(A, field_characteristic=self.field.characteristic, verbose=self.verbose)
             else:
                 rref, _ = row_reduce(A, scaling=False, threshold=0, prime=self.field.characteristic, verbose=self.verbose)
+            iteration += 1
         if self.verbose:
             print("")
         self.rref = drop_bottom_zero_rows(rref)
