@@ -15,6 +15,7 @@ from operator import mul
 from functools import reduce
 from copy import deepcopy
 from pycoretools import flatten
+from pyadic import ModP
 
 from .timeit_decorator import timeit
 from ._optional import GALOIS_FOUND
@@ -150,11 +151,16 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True, _use_galois=True, 
         field = points[0].field
     if field.characteristic == 0:
         if field.name in ['mpf', 'R']:
-            python_type = float
+            native_type = to_native_type = float
         else:
-            python_type = complex
+            native_type = to_native_type = complex
     else:
-        python_type = int
+        if field.name in ["padic", "Qp"]:
+            def to_native_type(x):  # first take residue mod p, then cast to int
+                return int(ModP(x) if x in field else ModP(x, field.characteristic))
+            native_type = int
+        else:
+            native_type = to_native_type = int
 
     # pad all ansatz monomials to equal length
     ansatze = deepcopy(ansatze)
@@ -167,25 +173,25 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True, _use_galois=True, 
     # build numerical bases
     variables = ['1'] + sorted(list(set(flatten(ansatze))), key=lambda x: len(x))
     if isinstance(points, dict):
-        bases_monomials = numpy.vectorize(python_type, otypes='O')(numpy.array([points[var] for var in variables]).T.copy())
+        bases_monomials = numpy.vectorize(to_native_type, otypes='O')(numpy.array([points[var] for var in variables]).T.copy())
     else:
-        bases_monomials = numpy.array([[python_type(point(var)) for var in variables] for point in points])
+        bases_monomials = numpy.array([[to_native_type(point(var)) for var in variables] for point in points])
 
     # complete build matrices
     As = []
     for i, prefactor in enumerate(prefactors):
         # complete basis with prefactor
         if isinstance(points, dict):
-            bases_prefactor = numpy.vectorize(python_type, otypes='O')(numpy.array([points[prefactor]]).T.copy())
+            bases_prefactor = numpy.vectorize(to_native_type, otypes='O')(numpy.array([points[prefactor]]).T.copy())
         else:
-            bases_prefactor = numpy.array([[python_type(point(prefactor)) if isinstance(prefactor, str)
+            bases_prefactor = numpy.array([[to_native_type(point(prefactor)) if isinstance(prefactor, str)
                                             else 1 if prefactor(point) == 1
-                                            else python_type(prefactor(point))] for point in points])
+                                            else to_native_type(prefactor(point))] for point in points])
         bases = numpy.block([bases_monomials, bases_prefactor])
         result_is_vector = bases.ndim < 2
         bases = numpy.atleast_2d(bases)
 
-        if field.name == "padic":
+        if field.name in ["padic", "Qp"]:
             bases = bases % field.characteristic
 
         lindices = numpy.zeros((len(ansatze[i]), (len(ansatze[i][0]) if len(ansatze[i]) > 0 else 0) + 1), dtype='uint32')
@@ -197,7 +203,7 @@ def load_matrices(prefactors, ansatze, points, use_cuda=True, _use_galois=True, 
         if len(lindices) > 0:
             if use_cuda:
                 As += [cuda_load_matrix(bases, lindices, (bases.shape[0], lindices.shape[0]),
-                                        field_characteristic=field.characteristic, _real=(python_type is float), verbose=verbose)]
+                                        field_characteristic=field.characteristic, _real=(native_type is float), verbose=verbose)]
             else:
                 if field.characteristic > 0:
                     if GALOIS_FOUND and _use_galois:
