@@ -14,11 +14,29 @@ from .tools import mapThreads   # !! WARNING: This requires a better solution !!
 
 
 class VectorSpaceOfFunctions(object):
-    """Vector Spaces of Fraction Fields of Polynomial (Quotient) Rings"""  # actually, rationality of the function is not required
+    """
+    Vector space spanned by a set of functions (e.g. functions in fraction fields of polynomial (quotient) rings),
+    with coefficients in a given number field.
+    """
 
     def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1),
                  verbose=True, use_gpu=True, iteration_start=20, iteration_step=20, max_iteration=50, Cores=8):
-        """functions_evaluator should return a 1d numpy array"""
+        """
+        Parameters
+        ----------
+        functions_evaluator : callable
+            Callable returning a 1D numpy array of function values for a given input point.
+        input_generator : callable
+            Callable generating numerical sampling points (e.g. by seed/index).
+        field : Field
+            Base field used for arithmetic (e.g. finite fields).
+        use_gpu : bool, default True
+            Use CUDA backend for row reduction when available.
+        iteration_start, iteration_step, max_iteration : int
+            Controls how many sample points are used to stabilise pivot discovery.
+        Cores : int
+            Parallelism used for sampling/evaluation on the CPU side.
+        """
         self.uses_gpu = use_gpu
         self.Cores = Cores
         self.verbose = verbose

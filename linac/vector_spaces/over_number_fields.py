@@ -11,9 +11,18 @@ from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row
 
 
 class ColumnVectorSpace(object):
-    """Column vector space over number fields (FF and Q supported atm)."""
+    """Column vector space over number fields (finite fields and rationals currently supported)."""
 
     def __init__(self, matrix, prime=2147483647, use_galois=None):
+        """
+        Parameters
+        ----------
+        matrix : 2D array-like
+            Matrix whose columns span the vector space.
+        prime : int or None, default 2147483647
+            If an integer, arithmetic is performed mod prime. If None, entries are converted to fractions.Fraction.
+        """
+
         if use_galois is None:
             use_galois = GALOIS_FOUND  # default behaviour
         self.use_galois = use_galois
