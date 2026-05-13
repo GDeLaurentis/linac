@@ -5,6 +5,7 @@ import numpy
 
 from syngular import Field
 
+from .._optional import CUDA_FOUND
 from ..pycuda_row_reduce import cuda_row_reduce
 from ..row_reduce import row_reduce
 from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row_reduced_echelon_form, \
@@ -20,7 +21,7 @@ class VectorSpaceOfFunctions(object):
     """
 
     def __init__(self, functions_evaluator, input_generator, field=Field("finite field", 2 ** 31 - 1, 1),
-                 verbose=True, use_gpu=True, iteration_start=20, iteration_step=20, max_iteration=50, Cores=8):
+                 verbose=True, use_gpu=None, iteration_start=20, iteration_step=20, max_iteration=50, Cores=8):
         """
         Parameters
         ----------
@@ -29,14 +30,21 @@ class VectorSpaceOfFunctions(object):
         input_generator : callable
             Callable generating numerical sampling points (e.g. by seed/index).
         field : Field
-            Base field used for arithmetic (e.g. finite fields).
-        use_gpu : bool, default True
-            Use CUDA backend for row reduction when available.
+            Base field used for arithmetic. Finite fields are currently the intended use case.
+        use_gpu : bool or None, default None
+            If True, use GPU acceleration for row reduction. If False, force CPU row reduction. If None, use GPU acceleration when CUDA/PyCUDA is available.
         iteration_start, iteration_step, max_iteration : int
             Controls how many sample points are used to stabilise pivot discovery.
         Cores : int
             Parallelism used for sampling/evaluation on the CPU side.
         """
+
+        if use_gpu is None:
+            use_gpu = CUDA_FOUND  # default behaviour
+
+        if use_gpu and not CUDA_FOUND:
+            raise RuntimeError("use_gpu=True requested but CUDA/PyCUDA is not available.")
+
         self.uses_gpu = use_gpu
         self.Cores = Cores
         self.verbose = verbose
@@ -46,6 +54,7 @@ class VectorSpaceOfFunctions(object):
         self.input_generator = input_generator
         self.__get_pivots__()
         self.basis_functions = self.all_functions_evaluator[self.pivots]
+
         if verbose:
             print(f"Instantiated vector space of dimension {self.dim}.")
 
