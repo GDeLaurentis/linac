@@ -3,6 +3,7 @@
 import functools
 import numpy
 
+from pycoretools import mapThreads
 from syngular import Field
 
 from .._optional import CUDA_FOUND
@@ -11,7 +12,6 @@ from ..row_reduce import row_reduce
 from ..linear_algebra_tools import drop_bottom_zero_rows, pivot_columns_from_row_reduced_echelon_form, \
     canonical_kernel_from_row_reduced_echelon_form
 from ..tensor_function import tensor_function
-from .tools import mapThreads   # !! WARNING: This requires a better solution !!
 
 
 class VectorSpaceOfFunctions(object):
