@@ -1,4 +1,6 @@
-# Linear Algebra with CUDA
+<p align="center">
+  <img src="assets/linac_logo_v1_transparent_blue_text.png" alt="Linac: Linear algebra with CUDA" width="700">
+</p>
 
 [![CI Lint](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml)
 [![CI Test](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_test.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_test.yml)
