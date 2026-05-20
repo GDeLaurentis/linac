@@ -33,9 +33,24 @@ linac.tensor\_function
     :members:
     :undoc-members:
 
+linac.vector\_spaces.over\_number\_fields
+-----------------------------------------
+
+.. automodule:: linac.vector_spaces.over_number_fields
+    :members:
+    :undoc-members:
+
+linac.vector\_spaces.over\_function\_fields
+-------------------------------------------
+
+.. automodule:: linac.vector_spaces.over_function_fields
+    :members:
+    :undoc-members:
+
 Module contents
 ---------------
 
 .. automodule:: linac
     :members:
+    :exclude-members: row_reduce, tensor_function
     :undoc-members:
