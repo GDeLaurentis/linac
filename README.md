@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/linac_logo_v1_transparent_blue_text.png" alt="Linac: Linear algebra with CUDA" width="700">
+  <img src="assets/linac_logo_v1_transparent_blue_text.png" alt="Linac: Linear algebra with CUDA" width="550">
 </p>
 
 [![CI Lint](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml)
@@ -12,62 +12,160 @@
 [![DOI](https://zenodo.org/badge/xxxxxxxx.svg)](https://zenodo.org/doi/10.5281/zenodo.xxxxxxxx)
 [![Python](https://img.shields.io/pypi/pyversions/linac?label=Python)](https://pypi.org/project/linac/)
 
-The `Linac` library implements hardware accelaration for linear algebra using CUDA, over a variety of number fields, including finite fields.
+`Linac` implements GPU-accelerated linear algebra using CUDA, with support for real and complex floating-point arithmetic, finite fields, and leading-digit p-adic numbers. Its main functionality is dense Gaussian elimination to reduced row-echelon form. Applications include functional reconstruction of analytic scattering amplitudes.
 
 ## Installation
-The package is available on the [Python Package Index](https://pypi.org/project/linac/)
-```
+
+The latest stable release is available from [PyPI](https://pypi.org/project/linac/):
+
+```bash
 pip install linac
 ```
-Alternativelty, it can be installed by cloning the repo
+
+To enable GPU acceleration, install the CUDA extra:
+
+```bash
+pip install "linac[cuda]"
 ```
-git clone https://github.com/GDeLaurentis/linac.git path/to/repo
-pip install -e path/to/repo[extras]
+
+For development, clone the repository and install it in editable mode:
+
+```bash
+git clone https://github.com/GDeLaurentis/linac.git
+pip install -e "linac[dev]"
 ```
-where `extras` can be any of
-```
-cuda, dev, full
+
+Available extras are:
+
+```text
+cuda, dev, full(=cuda+dev)
 ```
 
 ## Requirements
-`pip` will automatically install the required packages, which are
+
+The core package depends on:
+
+```text
+numpy, pycoretools, pyadic, syngular
 ```
-numpy, mpmath, pycuda (optional)
+
+Optional dependencies include:
+
+```text
+pycuda   # CUDA/GPU support
+galois   # faster CPU finite-field arithmetic
 ```
-The GPU capabilities require a working CUDA environment.
+
+GPU acceleration requires a working CUDA development environment, including `nvcc`, compatible NVIDIA drivers, and access to a CUDA-enabled GPU.
+
+You can check your CUDA setup with:
+
+```bash
+nvcc --version
+nvidia-smi
+```
+
+## Quick Start
+
+The main entry point is `cuda_row_reduce`, which computes a row-reduced echelon form on the GPU.
+
+```python
+import numpy
+from linac import cuda_row_reduce
+
+p = 2**31 - 1
+
+A = numpy.random.randint(0, p, size=(2000, 2000), dtype="uint32")
+rref = cuda_row_reduce(A, field_characteristic=p)
+```
+
+Setting `field_characteristic=0` selects floating-point arithmetic:
+
+```python
+A = numpy.random.rand(2000, 2000)
+rref = cuda_row_reduce(A, field_characteristic=0)
+```
+
+For CPU row reduction, use:
+
+```python
+from linac import row_reduce
+
+rref, variable_order = row_reduce(A, prime=p)
+```
+
+`Linac` also provides utilities for constructing dense linear systems from polynomial ansätze:
+
+```python
+from linac import load_matrices
+
+matrices = load_matrices(prefactors, ansatze, points, use_cuda=True)
+```
 
 ## Testing
 
-```
-pytest3 -rs --verbose --cov=linac --cov-report=html
+Run the test suite with:
+
+```bash
+pytest -rs --verbose --cov=linac --cov-report=html
 ```
 
 ## Timings
 
-Timing for Gaussian elimination to row reduced echelon form, with 32-bit integers (finite field). 
-Single-precision floating-point numbers should have similar timings.
+The following timings are for dense Gaussian elimination to reduced row-echelon form over the finite field with `p=(2**31 - 1)`. Times are shown in seconds as mean ± standard deviation.
 
-On an RTX 2080 Ti 11Gb (on Merlin cluster)
+| Matrix size | A100 80GB | RTX 4070 Laptop 8GB |
+|:-----------:|----------:|--------------------:|
+| 1,000       | 0.52 ± 0.01 | 0.28 ± 0.02        |
+| 2,000       | 0.56 ± 0.01 | 0.34 ± 0.01        |
+| 5,000       | 1.02 ± 0.01 | 3.31 ± 0.01        |
+| 10,000      | 3.60 ± 0.01 | 25.97 ± 0.66       |
+| 15,000      | 10.23 ± 0.02 | 98.21 ± 0.85      |
+| 20,000      | 23.40 ± 0.03 | 241.29 ± 3.00     |
+| 100,000     | 2824.64 | —                  |
 
-| Matrix size | Timing (seconds) |
-|:-----------:|:----------------:|
-|    8192     |        8         |
-|    16384    |        51        |
-|    32768    |       391        |
-|    40000    |       793        |
-|    50000    |      1899        |
+The 100k run used approximately 37.67 GiB of memory on an 80 GiB A100.
 
-## Theoretical Size Limit
+For full benchmark details and comparison with CPU implementations, see the accompanying paper and documentation.
 
-The theoretical size limit is given by $\sqrt{\text{VRAM in GB}/ 4 * 10 ^ 9}$.
-The real-world size limit is fairly close.
+## Size Limit
 
-| Available VRAM | Square matrix size |
-|:--------------:|:------------------:|
-|       4        |       31622        |
-|       8        |       44721        |
-|       11       |       52440        |
-|       12       |       54772        |
-|       16       |       63245        |
-|       24       |       77459        |
-|       40       |       100000       |
+For 32-bit entries, the approximate upper bound for a dense square matrix is
+
+```text
+N_max ~ sqrt(VRAM [bytes] / 4)
+```
+
+| Available VRAM | Approx. square matrix size |
+|:--------------:|---------------------------:|
+| 4 GB           | 31,622                     |
+| 8 GB           | 44,721                     |
+| 11 GB          | 52,440                     |
+| 12 GB          | 54,772                     |
+| 16 GB          | 63,245                     |
+| 24 GB          | 77,459                     |
+| 40 GB          | 100,000                    |
+| 80 GB          | 141,421                    |
+
+The practical limit is usually close to this estimate, up to padding and (small) memory-management overheads.
+
+## Documentation
+
+Documentation is available at:
+
+```text
+https://gdelaurentis.github.io/linac/
+```
+
+## Citation
+
+If you use `Linac` in academic work, please cite the accompanying paper and the Zenodo archive:
+
+```bibtex
+@software{linac,
+  author = {De Laurentis, Giuseppe and Franklin, Jack},
+  title = {Linac: linear algebra with CUDA over finite fields},
+  year = {2026},
+  doi = {10.5281/zenodo.xxxxxxxx},
+}
+```
