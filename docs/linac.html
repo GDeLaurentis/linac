@@ -1,0 +1,544 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>linac.pycuda_row_reduce &mdash; linac 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="linac" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            linac
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Modules Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">linac</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">linac.pycuda_row_reduce</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.pycuda_row_reduce.cuda_row_reduce"><code class="docutils literal notranslate"><span class="pre">cuda_row_reduce()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.row_reduce">linac.row_reduce</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.row_reduce.row_reduce"><code class="docutils literal notranslate"><span class="pre">row_reduce()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.linear_algebra_tools">linac.linear_algebra_tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.canonical_kernel_from_row_reduced_echelon_form"><code class="docutils literal notranslate"><span class="pre">canonical_kernel_from_row_reduced_echelon_form()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.drop_bottom_zero_rows"><code class="docutils literal notranslate"><span class="pre">drop_bottom_zero_rows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.invert_permutation"><code class="docutils literal notranslate"><span class="pre">invert_permutation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.isclose_or_greater"><code class="docutils literal notranslate"><span class="pre">isclose_or_greater()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.non_pivot_columns_from_canonical_kernel"><code class="docutils literal notranslate"><span class="pre">non_pivot_columns_from_canonical_kernel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.non_pivot_columns_from_row_reduced_echelon_form"><code class="docutils literal notranslate"><span class="pre">non_pivot_columns_from_row_reduced_echelon_form()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.permutation_matrix_from_permutation"><code class="docutils literal notranslate"><span class="pre">permutation_matrix_from_permutation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.pivot_columns_from_canonical_kernel"><code class="docutils literal notranslate"><span class="pre">pivot_columns_from_canonical_kernel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.pivot_columns_from_row_reduced_echelon_form"><code class="docutils literal notranslate"><span class="pre">pivot_columns_from_row_reduced_echelon_form()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.linear_algebra_tools.row_reduced_echelon_form_from_canonical_kernel"><code class="docutils literal notranslate"><span class="pre">row_reduced_echelon_form_from_canonical_kernel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.sparse_matrix_tools">linac.sparse_matrix_tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.coo_from_json_coo"><code class="docutils literal notranslate"><span class="pre">coo_from_json_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.coo_from_matrix"><code class="docutils literal notranslate"><span class="pre">coo_from_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.coo_from_plain_txt_coo"><code class="docutils literal notranslate"><span class="pre">coo_from_plain_txt_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.json_coo_from_coo"><code class="docutils literal notranslate"><span class="pre">json_coo_from_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.json_coo_from_matrix"><code class="docutils literal notranslate"><span class="pre">json_coo_from_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.matrix_from_coo"><code class="docutils literal notranslate"><span class="pre">matrix_from_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.matrix_from_json_coo"><code class="docutils literal notranslate"><span class="pre">matrix_from_json_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.matrix_from_plain_txt_coo"><code class="docutils literal notranslate"><span class="pre">matrix_from_plain_txt_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.plain_txt_coo_from_coo"><code class="docutils literal notranslate"><span class="pre">plain_txt_coo_from_coo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.plain_txt_coo_from_matrix"><code class="docutils literal notranslate"><span class="pre">plain_txt_coo_from_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.sparse_matrix_tools.sparsity"><code class="docutils literal notranslate"><span class="pre">sparsity()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.tensor_function">linac.tensor_function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.tensor_function.memoized"><code class="docutils literal notranslate"><span class="pre">memoized()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.tensor_function.tensor_function"><code class="docutils literal notranslate"><span class="pre">tensor_function</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linac.tensor_function.tensor_function.as_span"><code class="docutils literal notranslate"><span class="pre">tensor_function.as_span()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.tensor_function.tensor_function.flatten"><code class="docutils literal notranslate"><span class="pre">tensor_function.flatten()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.tensor_function.tensor_function.shape"><code class="docutils literal notranslate"><span class="pre">tensor_function.shape</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.tensor_function.update_shape"><code class="docutils literal notranslate"><span class="pre">update_shape()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.vector_spaces.over_number_fields">linac.vector_spaces.over_number_fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace.GFp"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace.GFp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace.dim"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace.dim</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac.vector_spaces.over_function_fields">linac.vector_spaces.over_function_fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.close_under_symmetries"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.close_under_symmetries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.dim"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.kernel"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.kernel</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-linac">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linac.ColumnVectorSpace"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linac.ColumnVectorSpace.GFp"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace.GFp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.ColumnVectorSpace.dim"><code class="docutils literal notranslate"><span class="pre">ColumnVectorSpace.dim</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.VectorSpaceOfFunctions"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linac.VectorSpaceOfFunctions.close_under_symmetries"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.close_under_symmetries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.VectorSpaceOfFunctions.dim"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linac.VectorSpaceOfFunctions.kernel"><code class="docutils literal notranslate"><span class="pre">VectorSpaceOfFunctions.kernel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.cuda_load_matrix"><code class="docutils literal notranslate"><span class="pre">cuda_load_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.cuda_row_reduce"><code class="docutils literal notranslate"><span class="pre">cuda_row_reduce()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.iterative_gaussian_solver"><code class="docutils literal notranslate"><span class="pre">iterative_gaussian_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.load_matrices"><code class="docutils literal notranslate"><span class="pre">load_matrices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linac.timeit"><code class="docutils literal notranslate"><span class="pre">timeit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">linac</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">linac</a></li>
+      <li class="breadcrumb-item active">linac.pycuda_row_reduce</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/linac.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-linac.pycuda_row_reduce">
+<span id="linac-pycuda-row-reduce"></span><h1>linac.pycuda_row_reduce<a class="headerlink" href="#module-linac.pycuda_row_reduce" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.pycuda_row_reduce.cuda_row_reduce">
+<span class="sig-prename descclassname"><span class="pre">linac.pycuda_row_reduce.</span></span><span class="sig-name descname"><span class="pre">cuda_row_reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_characteristic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_mod64</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.pycuda_row_reduce.cuda_row_reduce" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>matrix (2D numpy.ndarray):</dt><dd><p>The matrix to be cast to row-reduced echelon form.</p>
+</dd>
+<dt>field_characteristic (int, optional, default: 0):</dt><dd><p>The characteristic p of the field, or 0 for real and complex matrices.</p>
+</dd>
+<dt>verbose (bool, optional, default: False):</dt><dd><p>If True, prints additional information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-linac.row_reduce">
+<span id="linac-row-reduce"></span><h1>linac.row_reduce<a class="headerlink" href="#module-linac.row_reduce" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.row_reduce.row_reduce">
+<span class="sig-prename descclassname"><span class="pre">linac.row_reduce.</span></span><span class="sig-name descname"><span class="pre">row_reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivoting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduced_echelon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.row_reduce.row_reduce" title="Link to this definition"></a></dt>
+<dd><p>Row reduction to (reduced) echelon form on the cpu using numpy.
+The matrix is kept of whatever object type it is made of, unless prime is specified.
+In the latter case the computation happens over numpy.int64 in a finite field of cardinality prime.</p>
+</dd></dl>
+
+</section>
+<section id="module-linac.linear_algebra_tools">
+<span id="linac-linear-algebra-tools"></span><h1>linac.linear_algebra_tools<a class="headerlink" href="#module-linac.linear_algebra_tools" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.canonical_kernel_from_row_reduced_echelon_form">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">canonical_kernel_from_row_reduced_echelon_form</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_reduced_echelon_form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.canonical_kernel_from_row_reduced_echelon_form" title="Link to this definition"></a></dt>
+<dd><p>Returns the kernel or null-space of a matrix in canonical form. The input should be in reduced echelon form.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.drop_bottom_zero_rows">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">drop_bottom_zero_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_reduced_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.drop_bottom_zero_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.invert_permutation">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">invert_permutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">permutation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.invert_permutation" title="Link to this definition"></a></dt>
+<dd><p>Returns the inverse of permutation (requires input and output as tuples of indices)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.isclose_or_greater">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">isclose_or_greater</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.isclose_or_greater" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.non_pivot_columns_from_canonical_kernel">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">non_pivot_columns_from_canonical_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canonical_kernel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.non_pivot_columns_from_canonical_kernel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.non_pivot_columns_from_row_reduced_echelon_form">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">non_pivot_columns_from_row_reduced_echelon_form</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_reduced_echelon_form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.non_pivot_columns_from_row_reduced_echelon_form" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.permutation_matrix_from_permutation">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">permutation_matrix_from_permutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">permutation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.permutation_matrix_from_permutation" title="Link to this definition"></a></dt>
+<dd><p>Permutation (as list of indices) to permutation matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.pivot_columns_from_canonical_kernel">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">pivot_columns_from_canonical_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canonical_kernel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.pivot_columns_from_canonical_kernel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.pivot_columns_from_row_reduced_echelon_form">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">pivot_columns_from_row_reduced_echelon_form</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_reduced_echelon_form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.pivot_columns_from_row_reduced_echelon_form" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.linear_algebra_tools.row_reduced_echelon_form_from_canonical_kernel">
+<span class="sig-prename descclassname"><span class="pre">linac.linear_algebra_tools.</span></span><span class="sig-name descname"><span class="pre">row_reduced_echelon_form_from_canonical_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canonical_kernel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.linear_algebra_tools.row_reduced_echelon_form_from_canonical_kernel" title="Link to this definition"></a></dt>
+<dd><p>Returns the row reduced echelon form the kernel kernel.</p>
+</dd></dl>
+
+</section>
+<section id="module-linac.sparse_matrix_tools">
+<span id="linac-sparse-matrix-tools"></span><h1>linac.sparse_matrix_tools<a class="headerlink" href="#module-linac.sparse_matrix_tools" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.coo_from_json_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">coo_from_json_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'fractions.Fraction'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.coo_from_json_coo" title="Link to this definition"></a></dt>
+<dd><p>Loads coo from json containing coo dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.coo_from_matrix">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">coo_from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.coo_from_matrix" title="Link to this definition"></a></dt>
+<dd><p>COO (Coordinate list) dictionary: {(row, column): value}.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.coo_from_plain_txt_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">coo_from_plain_txt_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'fractions.Fraction'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.coo_from_plain_txt_coo" title="Link to this definition"></a></dt>
+<dd><p>Loads coo from json containing coo dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.json_coo_from_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">json_coo_from_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.json_coo_from_coo" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.json_coo_from_matrix">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">json_coo_from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.json_coo_from_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.matrix_from_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">matrix_from_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coo</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.matrix_from_coo" title="Link to this definition"></a></dt>
+<dd><p>Converts a COO dictionary back to a numpy array.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.matrix_from_json_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">matrix_from_json_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'fractions.Fraction'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.matrix_from_json_coo" title="Link to this definition"></a></dt>
+<dd><p>Loads matrix from json containing coo dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.matrix_from_plain_txt_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">matrix_from_plain_txt_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'fractions.Fraction'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.matrix_from_plain_txt_coo" title="Link to this definition"></a></dt>
+<dd><p>Loads coo from json containing coo dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.plain_txt_coo_from_coo">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">plain_txt_coo_from_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.plain_txt_coo_from_coo" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.plain_txt_coo_from_matrix">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">plain_txt_coo_from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.plain_txt_coo_from_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.sparse_matrix_tools.sparsity">
+<span class="sig-prename descclassname"><span class="pre">linac.sparse_matrix_tools.</span></span><span class="sig-name descname"><span class="pre">sparsity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.sparse_matrix_tools.sparsity" title="Link to this definition"></a></dt>
+<dd><p>String representing the % of zeros in matrix.</p>
+</dd></dl>
+
+</section>
+<section id="module-linac.tensor_function">
+<span id="linac-tensor-function"></span><h1>linac.tensor_function<a class="headerlink" href="#module-linac.tensor_function" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.tensor_function.memoized">
+<span class="sig-prename descclassname"><span class="pre">linac.tensor_function.</span></span><span class="sig-name descname"><span class="pre">memoized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">decorator_args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">decorator_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.tensor_function.memoized" title="Link to this definition"></a></dt>
+<dd><p>Diskcaching decorator generator.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="linac.tensor_function.tensor_function">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">linac.tensor_function.</span></span><span class="sig-name descname"><span class="pre">tensor_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callable_function</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.tensor_function.tensor_function" title="Link to this definition"></a></dt>
+<dd><p>Tensor function supporting indexing and iteration.
+For instance, the initializer ‘callable_function’ can be a function returning a numpy.array</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="linac.tensor_function.tensor_function.as_span">
+<span class="sig-name descname"><span class="pre">as_span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Field('finite</span> <span class="pre">field',</span> <span class="pre">2147483647,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vs_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.tensor_function.tensor_function.as_span" title="Link to this definition"></a></dt>
+<dd><p>Return the VectorSpaceOfFunctions spanned by the components of this tensor_function.
+All arguments are passed directly to VectorSpaceOfFunctions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="linac.tensor_function.tensor_function.flatten">
+<span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#linac.tensor_function.tensor_function.flatten" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.tensor_function.tensor_function.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#linac.tensor_function.tensor_function.shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.tensor_function.update_shape">
+<span class="sig-prename descclassname"><span class="pre">linac.tensor_function.</span></span><span class="sig-name descname"><span class="pre">update_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.tensor_function.update_shape" title="Link to this definition"></a></dt>
+<dd><p>Decorator to update shape/size metadata after function call.</p>
+</dd></dl>
+
+</section>
+<section id="module-linac.vector_spaces.over_number_fields">
+<span id="linac-vector-spaces-over-number-fields"></span><h1>linac.vector_spaces.over_number_fields<a class="headerlink" href="#module-linac.vector_spaces.over_number_fields" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_number_fields.ColumnVectorSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">linac.vector_spaces.over_number_fields.</span></span><span class="sig-name descname"><span class="pre">ColumnVectorSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2147483647</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_galois</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace" title="Link to this definition"></a></dt>
+<dd><p>Column vector space over number fields (finite fields and rationals currently supported).</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_number_fields.ColumnVectorSpace.GFp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GFp</span></span><a class="headerlink" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace.GFp" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_number_fields.ColumnVectorSpace.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#linac.vector_spaces.over_number_fields.ColumnVectorSpace.dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-linac.vector_spaces.over_function_fields">
+<span id="linac-vector-spaces-over-function-fields"></span><h1>linac.vector_spaces.over_function_fields<a class="headerlink" href="#module-linac.vector_spaces.over_function_fields" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">linac.vector_spaces.over_function_fields.</span></span><span class="sig-name descname"><span class="pre">VectorSpaceOfFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions_evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Field('finite</span> <span class="pre">field',</span> <span class="pre">2147483647,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iteration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions" title="Link to this definition"></a></dt>
+<dd><p>Vector space spanned by a set of functions (e.g. functions in fraction fields of polynomial (quotient) rings),
+with coefficients in a given number field.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.close_under_symmetries">
+<span class="sig-name descname"><span class="pre">close_under_symmetries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.close_under_symmetries" title="Link to this definition"></a></dt>
+<dd><p>Symmetries are applied to first positional arguments, which should define a image function under the symmetry.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.kernel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#linac.vector_spaces.over_function_fields.VectorSpaceOfFunctions.kernel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-linac">
+<span id="module-contents"></span><h1>Module contents<a class="headerlink" href="#module-linac" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="linac.ColumnVectorSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">ColumnVectorSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2147483647</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_galois</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.ColumnVectorSpace" title="Link to this definition"></a></dt>
+<dd><p>Column vector space over number fields (finite fields and rationals currently supported).</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.ColumnVectorSpace.GFp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GFp</span></span><a class="headerlink" href="#linac.ColumnVectorSpace.GFp" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.ColumnVectorSpace.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#linac.ColumnVectorSpace.dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="linac.VectorSpaceOfFunctions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">VectorSpaceOfFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions_evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Field('finite</span> <span class="pre">field',</span> <span class="pre">2147483647,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iteration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.VectorSpaceOfFunctions" title="Link to this definition"></a></dt>
+<dd><p>Vector space spanned by a set of functions (e.g. functions in fraction fields of polynomial (quotient) rings),
+with coefficients in a given number field.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="linac.VectorSpaceOfFunctions.close_under_symmetries">
+<span class="sig-name descname"><span class="pre">close_under_symmetries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.VectorSpaceOfFunctions.close_under_symmetries" title="Link to this definition"></a></dt>
+<dd><p>Symmetries are applied to first positional arguments, which should define a image function under the symmetry.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.VectorSpaceOfFunctions.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#linac.VectorSpaceOfFunctions.dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="linac.VectorSpaceOfFunctions.kernel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#linac.VectorSpaceOfFunctions.kernel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.cuda_load_matrix">
+<span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">cuda_load_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lindices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_characteristic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_mod64</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.cuda_load_matrix" title="Link to this definition"></a></dt>
+<dd><p>Construct a dense matrix on the GPU by evaluating monomials as products of precomputed base values.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>bases<span class="classifier">(n_rows, basis_length) array</span></dt><dd><p>Variable values per row/point (optionally including a prefactor column).</p>
+</dd>
+<dt>lindices<span class="classifier">(n_cols, degree) uint32 array</span></dt><dd><p>Each row specifies a monomial as indices into <cite>bases</cite> (assumes uniform degree).</p>
+</dd>
+<dt>field_characteristic<span class="classifier">int, default 0</span></dt><dd><p>Modulus p for finite fields or p-adics leading digit; 0 selects real/complex arithmetic.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>A<span class="classifier">(n_rows, n_cols) ndarray</span></dt><dd><p>Matrix representing the linear system.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.cuda_row_reduce">
+<span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">cuda_row_reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_characteristic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_mod64</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.cuda_row_reduce" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>matrix (2D numpy.ndarray):</dt><dd><p>The matrix to be cast to row-reduced echelon form.</p>
+</dd>
+<dt>field_characteristic (int, optional, default: 0):</dt><dd><p>The characteristic p of the field, or 0 for real and complex matrices.</p>
+</dd>
+<dt>verbose (bool, optional, default: False):</dt><dd><p>If True, prints additional information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.iterative_gaussian_solver">
+<span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">iterative_gaussian_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivoting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_characteristic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.iterative_gaussian_solver" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.load_matrices">
+<span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">load_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefactors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansatze</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_use_galois</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.load_matrices" title="Link to this definition"></a></dt>
+<dd><p>Build one or more matrices representing polynomial linear systems evaluated at numerical points.</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>prefactors<span class="classifier">list</span></dt><dd><p>One prefactor per system (string key or callable), e.g. inverse denominators for rational functions.</p>
+</dd>
+<dt>ansatze<span class="classifier">list</span></dt><dd><p>One ansatz per system; each ansatz is a list of monomials, i.e. a polynomial with unknown coefficients.</p>
+</dd>
+<dt>points<span class="classifier">list or dict</span></dt><dd><p>Numerical evaluation points (vectorised), including a field descriptor (e.g. a <code class="docutils literal notranslate"><span class="pre">syngular.RingPoints</span></code> list subclass).</p>
+</dd>
+<dt>use_cuda<span class="classifier">bool, default True</span></dt><dd><p>Use CUDA backend when available.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>As<span class="classifier">list of ndarrays</span></dt><dd><p>One matrix per system.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="linac.timeit">
+<span class="sig-prename descclassname"><span class="pre">linac.</span></span><span class="sig-name descname"><span class="pre">timeit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#linac.timeit" title="Link to this definition"></a></dt>
+<dd><p>Print the runtime of the decorated function as hours:minutes:seconds:milliseconds</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="linac" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Giuseppe De Laurentis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
