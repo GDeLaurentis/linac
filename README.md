@@ -32,7 +32,7 @@ For development, clone the repository and install it in editable mode:
 
 ```bash
 git clone https://github.com/GDeLaurentis/linac.git
-pip install -e "linac[dev]"
+pip install -e "linac[full]"
 ```
 
 Available extras are:
@@ -53,8 +53,15 @@ Optional dependencies include:
 
 ```text
 pycuda   # CUDA/GPU support
-galois   # faster CPU finite-field arithmetic
 ```
+
+with the cuda extra, and 
+
+```text
+mpmath, galois, diskcache, pytest, pytest-cov, flake8
+```
+
+with the dev extra.
 
 GPU acceleration requires a working CUDA development environment, including `nvcc`, compatible NVIDIA drivers, and access to a CUDA-enabled GPU.
 
