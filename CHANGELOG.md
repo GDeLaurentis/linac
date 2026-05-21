@@ -18,6 +18,14 @@ with the exception that new major versions may also accompany paper releases.
 ### Deprecated
 
 
+## [1.0.1] - 2026-05-21
+
+### Fixed
+
+- Switched on DOI generation with Zenodo
+- PyPI needs absolute path for logo
+
+
 ## [1.0.0] - 2026-05-21
 
 ### Added
@@ -33,5 +41,6 @@ with the exception that new major versions may also accompany paper releases.
 - Linear-algebra utilities, including `pivot_columns_from_row_reduced_echelon_form` and `canonical_kernel_from_row_reduced_echelon_form`.
 
 
-[unreleased]: https://github.com/GDeLaurentis/linac/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/GDeLaurentis/linac/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/GDeLaurentis/lips/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/GDeLaurentis/linac/releases/tag/v1.0.0
