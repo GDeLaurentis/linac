@@ -11,7 +11,7 @@
 [![PyPI](https://img.shields.io/pypi/v/linac?label=PyPI)](https://pypi.org/project/linac/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/linac.svg?label=PyPI%20downloads)](https://pypi.org/project/linac/)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/GDeLaurentis/linac/HEAD)
-[![DOI](https://zenodo.org/badge/xxxxxxxx.svg)](https://zenodo.org/doi/10.5281/zenodo.20327732)
+[![DOI](https://zenodo.org/badge/20327732.svg)](https://zenodo.org/doi/10.5281/zenodo.20327732)
 [![Python](https://img.shields.io/pypi/pyversions/linac?label=Python)](https://pypi.org/project/linac/)
 
 `Linac` implements GPU-accelerated linear algebra using CUDA, with support for real and complex floating-point arithmetic, finite fields, and leading-digit p-adic numbers. Its main functionality is dense Gaussian elimination to reduced row-echelon form. Applications include functional reconstruction of analytic scattering amplitudes.
