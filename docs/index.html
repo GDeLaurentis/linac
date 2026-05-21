@@ -41,7 +41,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Modules Documentation</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">linac</a></li>
 </ul>
@@ -72,35 +72,97 @@
              
   <section id="linear-algebra-with-cuda">
 <h1>Linear Algebra with CUDA<a class="headerlink" href="#linear-algebra-with-cuda" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-</div>
-<p>…</p>
+<p><code class="docutils literal notranslate"><span class="pre">Linac</span></code> is a Python library for GPU-accelerated linear algebra using
+CUDA. Its main functionality is dense Gaussian elimination to
+row-reduced echelon form, with support for real and complex
+floating-point arithmetic, finite fields, and leading-digit
+p-adic workflows.</p>
+<p>The package was developed for applications to finite-field
+reconstruction of scattering amplitude in quantum field theory, but the
+core routines are general-purpose tools for dense linear algebra over
+the supported arithmetic domains.</p>
+<section id="main-features">
+<h2>Main features<a class="headerlink" href="#main-features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>GPU row reduction to reduced row-echelon form via
+<a class="reference internal" href="linac.html#linac.cuda_row_reduce" title="linac.cuda_row_reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.cuda_row_reduce()</span></code></a>.</p></li>
+<li><p>CPU row reduction via <a class="reference internal" href="linac.html#module-linac.row_reduce" title="linac.row_reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.row_reduce()</span></code></a>.</p></li>
+<li><p>Matrix construction for polynomial linear systems via
+<a class="reference internal" href="linac.html#linac.cuda_load_matrix" title="linac.cuda_load_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.cuda_load_matrix()</span></code></a> and <a class="reference internal" href="linac.html#linac.load_matrices" title="linac.load_matrices"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.load_matrices()</span></code></a>.</p></li>
+<li><p>Utilities for vector spaces over number fields and function fields.</p></li>
+<li><p>Support for CUDA acceleration through <code class="docutils literal notranslate"><span class="pre">pycuda</span></code>.</p></li>
+<li><p>Optional CPU finite-field acceleration through <code class="docutils literal notranslate"><span class="pre">galois</span></code> when
+available.</p></li>
+</ul>
+</section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
-<p>Installation is easy with pip:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">linac</span><span class="p">[</span><span class="n">full</span><span class="p">]</span>
+<p>The latest stable release is available from PyPI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>linac
 </pre></div>
 </div>
-<p>alternatively the package can be cloned from github at <a class="reference external" href="https://github.com/GDeLaurentis/linac">https://github.com/GDeLaurentis/linac</a>.</p>
+<p>To enable GPU acceleration, install the CUDA extra:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;linac[cuda]&quot;</span>
+</pre></div>
+</div>
+<p>For development, clone the repository and install it in editable mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/GDeLaurentis/linac.git
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;linac[full]&quot;</span>
+</pre></div>
+</div>
+<p>The available extras are</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>cuda, dev, full (= cuda + dev)
+</pre></div>
+</div>
+<p>GPU acceleration requires a working CUDA development environment,
+including <code class="docutils literal notranslate"><span class="pre">nvcc</span></code>, compatible NVIDIA drivers, and access to a
+CUDA-enabled GPU.</p>
 </section>
 <section id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
-<p>A simple example is</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span><span class="w"> </span><span class="nn">linac</span><span class="w"> </span><span class="kn">import</span> <span class="n">cuda_row_reduce</span>
+<p>The main entry point is <a class="reference internal" href="linac.html#linac.cuda_row_reduce" title="linac.cuda_row_reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.cuda_row_reduce()</span></code></a>, which computes a
+row-reduced echelon form on the GPU.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+<span class="linenos">2</span><span class="kn">from</span><span class="w"> </span><span class="nn">linac</span><span class="w"> </span><span class="kn">import</span> <span class="n">cuda_row_reduce</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="n">p</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="linenos">5</span>
+<span class="linenos">6</span><span class="n">A</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint32&quot;</span><span class="p">)</span>
+<span class="linenos">7</span><span class="n">rref</span> <span class="o">=</span> <span class="n">cuda_row_reduce</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">field_characteristic</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
 </pre></div>
 </div>
-</div></blockquote>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">field_characteristic=0</span></code> selects floating-point arithmetic.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+<span class="linenos">2</span><span class="kn">from</span><span class="w"> </span><span class="nn">linac</span><span class="w"> </span><span class="kn">import</span> <span class="n">cuda_row_reduce</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="n">A</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+<span class="linenos">5</span><span class="n">rref</span> <span class="o">=</span> <span class="n">cuda_row_reduce</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">field_characteristic</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For CPU row reduction, use <a class="reference internal" href="linac.html#module-linac.row_reduce" title="linac.row_reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.row_reduce()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span><span class="w"> </span><span class="nn">linac</span><span class="w"> </span><span class="kn">import</span> <span class="n">row_reduce</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="n">rref</span><span class="p">,</span> <span class="n">variable_order</span> <span class="o">=</span> <span class="n">row_reduce</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">prime</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
-<section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
+<section id="constructing-linear-systems">
+<h2>Constructing linear systems<a class="headerlink" href="#constructing-linear-systems" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Linac</span></code> also provides utilities for constructing dense matrices from
+polynomial ansätze. These are useful when fitting unknown coefficients
+from numerical evaluations.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span><span class="w"> </span><span class="nn">linac</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_matrices</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="n">matrices</span> <span class="o">=</span> <span class="n">load_matrices</span><span class="p">(</span><span class="n">prefactors</span><span class="p">,</span> <span class="n">ansatze</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">use_cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For lower-level GPU matrix construction, see
+<a class="reference internal" href="linac.html#linac.cuda_load_matrix" title="linac.cuda_load_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">linac.cuda_load_matrix()</span></code></a>.</p>
+</section>
+<section id="documentation-contents">
+<h2>Documentation contents<a class="headerlink" href="#documentation-contents" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Modules Documentation</span></p>
+<p class="caption" role="heading"><span class="caption-text">User guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">linac</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="linac.html">linac.pycuda_row_reduce</a></li>
@@ -115,6 +177,21 @@
 </li>
 </ul>
 </div>
+</section>
+<section id="project-links">
+<h2>Project links<a class="headerlink" href="#project-links" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>GitHub repository: <a class="reference external" href="https://github.com/GDeLaurentis/linac">https://github.com/GDeLaurentis/linac</a></p></li>
+<li><p>PyPI package: <a class="reference external" href="https://pypi.org/project/linac/">https://pypi.org/project/linac/</a></p></li>
+</ul>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
 </section>
 </section>
 
