@@ -1,5 +1,7 @@
-linac_logo_v1<p align="center">
-  <img src="assets/linac_logo_v2_transparent.png" alt="Linac: Linear algebra with CUDA" width="550">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/GDeLaurentis/linac/main/assets/linac_logo_v2_transparent.png"
+       alt="Linac: Linear algebra with CUDA"
+       width="550">
 </p>
 
 [![CI Lint](https://github.com/GDeLaurentis/linac/actions/workflows/ci_lint.yml/badge.svg)](https://github.com/GDeLaurentis/linac/actions/workflows/ci_lint.yml)
