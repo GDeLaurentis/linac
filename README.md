@@ -1,6 +1,4 @@
-linac_logo_v1<p align="center">
-  <img src="assets/linac_logo_v2_transparent.png" alt="Linac: Linear algebra with CUDA" width="550">
-</p>
+# ![Linac: Linear algebra with CUDA](https://raw.githubusercontent.com/GDeLaurentis/linac-dev/main/assets/linac_logo_v2_transparent.png)
 
 [![CI Lint](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_lint.yml)
 [![CI Test](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_test.yml/badge.svg)](https://github.com/GDeLaurentis/linac-dev/actions/workflows/ci_test.yml)
