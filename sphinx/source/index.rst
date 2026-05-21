@@ -5,7 +5,7 @@ Linear Algebra with CUDA
 CUDA. Its main functionality is dense Gaussian elimination to
 row-reduced echelon form, with support for real and complex
 floating-point arithmetic, finite fields, and leading-digit
-``p``-adic workflows.
+p-adic workflows.
 
 The package was developed for applications to finite-field
 reconstruction of scattering amplitude in quantum field theory, but the
@@ -119,21 +119,6 @@ Documentation contents
    :caption: User guide
 
    modules
-
-API reference
--------------
-
-.. autosummary::
-   :toctree: generated
-   :nosignatures:
-
-   linac.cuda_row_reduce
-   linac.cuda_load_matrix
-   linac.load_matrices
-   linac.row_reduce
-   linac.tensor_function
-   linac.ColumnVectorSpace
-   linac.VectorSpaceOfFunctions
 
 Project links
 -------------
